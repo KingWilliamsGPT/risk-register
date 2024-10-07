@@ -1,0 +1,16 @@
+{% extends "./risk_register_base.html" %}
+{% load humanize %}
+
+
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xl-6 col-xxl-12">
+            <h1>Hello {{user}}</h1>
+
+            <a href="{% url 'risk_register:risk_create' %}">Add a new risk</a>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

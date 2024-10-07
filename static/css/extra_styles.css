@@ -1,0 +1,14 @@
+/* AUTHENTICATION --------------------------------------- */
+
+
+.auth-form>.text-center:first-child img{
+    width: 100%;
+    transform: scale(1.5, 1.5)
+}
+
+.auth-form>.text-center:first-child {
+    overflow: hidden;
+}
+
+
+/* AUTHENTICATION --------------------------------------- */

@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+    <!-- Title -->
+	<title>{% block title %}{{ settings.APP_NAME }}{% endblock title %}</title>
+	<meta name="description" content="Need Courier Services In Nigeria? Red Star Express PLC is a world leading courier and package delivery company in Nigeria. We are also a licensee of FedEx in Nigeria.">
+	<link rel="canonical" href="https://redstarplc.com/">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Courier Services In Nigeria | Red Star Express PLC Courier Services">
+	<meta property="og:description" content="Need Courier Services In Nigeria? Red Star Express PLC is a world leading courier and package delivery company in Nigeria. We are also a licensee of FedEx in Nigeria.">
+	<meta property="og:url" content="https://redstarplc.com/">
+	<meta property="og:site_name" content="Red Star Express Plc">
+	<meta property="article:modified_time" content="2022-02-10T16:38:23+00:00">
+	<meta name="twitter:card" content="summary">
+	<script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-2F6VM4D94L&amp;l=dataLayer&amp;cx=c"></script><script type="text/javascript" async="" charset="utf-8" src="https://www.gstatic.com/recaptcha/releases/xds0rzGrktR88uEZ2JUvdgOY/recaptcha__en.js" crossorigin="anonymous" integrity="sha384-LsgFz6D3IXKi1Rzqj4uhSQDNZOj1dcZCWxIrJG5IYGWvpJ304xZdrK8AxV/LlQPB"></script><script type="text/javascript" async="" charset="utf-8" src="https://www.gstatic.com/recaptcha/releases/xds0rzGrktR88uEZ2JUvdgOY/recaptcha__en.js" crossorigin="anonymous" integrity="sha384-LsgFz6D3IXKi1Rzqj4uhSQDNZOj1dcZCWxIrJG5IYGWvpJ304xZdrK8AxV/LlQPB"></script><script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://redstarplc.com/#website","url":"https://redstarplc.com/","name":"Red Star Express Plc","description":"World Leading Package Delivering and Shipping Service Provider","potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://redstarplc.com/?s={search_term_string}"},"query-input":"required name=search_term_string"}],"inLanguage":"en-US"},{"@type":"WebPage","@id":"https://redstarplc.com/#webpage","url":"https://redstarplc.com/","name":"Courier Services In Nigeria | Red Star Express PLC Courier Services","isPartOf":{"@id":"https://redstarplc.com/#website"},"datePublished":"2017-09-28T23:59:14+00:00","dateModified":"2022-02-10T16:38:23+00:00","description":"Need Courier Services In Nigeria? Red Star Express PLC is a world leading courier and package delivery company in Nigeria. We are also a licensee of FedEx in Nigeria.","breadcrumb":{"@id":"https://redstarplc.com/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://redstarplc.com/"]}]},{"@type":"BreadcrumbList","@id":"https://redstarplc.com/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home"}]}]}</script>
+	<meta name="google-site-verification" content="nhWDnSyHSsrAdFdSLNwgFaixOl7X48roCFZUtwCEGXw">
+	<!-- Meta -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="author" content="samuraicoderr">
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+	<!-- Mobile Specific -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Favicon icon -->
+	<link rel="shortcut icon" type="image/x-icon" href="https://redstarplc.com/wp-content/uploads/2017/09/cropped-staricon-1-32x32.png">
+
+	<link rel="icon" href="https://redstarplc.com/wp-content/uploads/2017/09/cropped-staricon-1-32x32.png" sizes="32x32">
+	<link rel="icon" href="https://redstarplc.com/wp-content/uploads/2017/09/cropped-staricon-1-192x192.png" sizes="192x192">
+	<link rel="apple-touch-icon" href="https://redstarplc.com/wp-content/uploads/2017/09/cropped-staricon-1-180x180.png">
+	<meta name="msapplication-TileImage" content="https://redstarplc.com/wp-content/uploads/2017/09/cropped-staricon-1-270x270.png">
+
+	<link href="{% static 'vendor/bootstrap-select/css/bootstrap-select.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/extra_styles.css' %}" rel="stylesheet">
+	<link href="../../../fonts.googleapis.com/css2160f.css?family=Poppins:wght@100;200;300;400;500;600;700;800;900&amp;family=Roboto:wght@100;300;400;500;700;900&amp;display=swap" rel="stylesheet">
+
+    {% block more_head %}{% endblock more_head %}
+    
+</head>
+
+<body {% block body_attrs %}class="h-100"{% endblock body_attrs %}>
+    
+    {% block contents %}{% endblock contents %}
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+	<script src="{% static 'vendor/global/global.min.js' %}"></script>
+	<script src="{% static 'vendor/bootstrap-select/js/bootstrap-select.min.js' %}"></script>
+	<script src="{% static 'js/custom.min.js' %}"></script>
+    <script src="{% static 'js/deznav-init.js' %}"></script>
+    {% block more_scripts %}{% endblock more_scripts %}
+
+	<script>
+		const home_link = "{% url 'risk_register:home' %}";
+
+		$(document).ready(()=>{
+			const $link_to_home = $('.auth-form>.text-center:first-child a');
+			$link_to_home.attr('href', home_link);
+		});
+	</script>
+</body>
+</html>
