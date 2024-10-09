@@ -40,7 +40,7 @@ urlpatterns = [
 
     # path for homepage where successfull login will redirect
     # path('', views.homepage, name='homepage'),
-    path('', rviews.Dashboard, name='homepage'),
+    path('', rviews.Dashboard.as_view(), name='homepage'),
 
 
 
