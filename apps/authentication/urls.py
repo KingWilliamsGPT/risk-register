@@ -2,7 +2,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from . import views
 
-from apps.risk_register import views as rviews
+from apps.risk_manager import views as rviews
 
 from .forms import UserLoginForm, ResetPasswordConfirmForm, ResetPasswordForm
 
