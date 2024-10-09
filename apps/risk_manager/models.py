@@ -44,6 +44,15 @@ class Risk(models.Model):
         '=2=2': ('low', 'light_green'),
     }
 
+    PROBABILITY_CHOICES = [
+        (1, '1 - Very Low'),
+        (2, '2 - Low'),
+        (3, '3 - Medium'),
+        (4, '4 - High'),
+        (5, '5 - Very High'),
+    ]
+
+
     RANGE_1_TO_5 = [
             MinValueValidator(1),  # Minimum value of 1
             MaxValueValidator(5)   # Maximum value of 5
@@ -52,28 +61,31 @@ class Risk(models.Model):
     class Meta:
         verbose_name = _("Risk")
         verbose_name_plural = _("Risks")
+        
+    implication = models.CharField(max_length=500, blank=True, default='')
 
     risk_type = models.CharField(max_length=50, choices=RISK_TYPE_CHOICES)
     risk_description = models.CharField(max_length=500, blank=True, default='')
-    implication = models.CharField(max_length=500, blank=True, default='')
     # category = models.ForeignKey("Category", on_delete=models.CASCADE)from djnago.
 
     probability = models.PositiveSmallIntegerField(
+        choices=PROBABILITY_CHOICES,
         validators=RANGE_1_TO_5,
     )
     impact = models.PositiveSmallIntegerField(
+        choices=PROBABILITY_CHOICES,
         validators=RANGE_1_TO_5,
     )
 
 
-    # Admin section
+    # Admin section #############################################################################################
 
     risk_response = models.CharField(max_length=500, blank=True, default='')
     risk_owner = models.ForeignKey("authentication.Department", on_delete=models.CASCADE, related_name='risks')
     risk_budget = MoneyField(max_digits=10, decimal_places=2, default_currency='NGN')
 
-    completed_actions = models.CharField(max_length=1500, blank=True, null=True)
-    future_actions = models.CharField(max_length=1500, blank=True, null=True)
+    # completed_actions = models.CharField(max_length=1500, blank=True, null=True)
+    # future_actions = models.CharField(max_length=1500, blank=True, null=True)
 
     is_closed = models.BooleanField(default=False)       # once the risk is closed by an admin it cannot be edited until opened by another admin
 

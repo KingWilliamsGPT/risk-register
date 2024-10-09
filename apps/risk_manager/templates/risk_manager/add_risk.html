@@ -5,7 +5,7 @@
 {% block main_content %}
 <div class="container-fluid">
     <div class="row">
-        <div class="col-xl-6 col-xxl-12">
+        <div class="col-md-10 col-12">
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Add Risk</h4>
@@ -17,6 +17,45 @@
                                 <label for="risk_description">Risk Description</label>
                                 {{ form.risk_description }}
                             </div>
+                            <div class="form-group">
+                                <label for="risk_type">Risk Type</label>
+                                {{ form.risk_type }}
+                            </div>  
+                            <div class="row">
+                                <div class="col-md-6 col-12">
+                                    <label for="probability">Probability</label>
+                                    {{ form.probability }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="impact">Impact</label>
+                                    {{ form.impact }}
+                                </div>
+                            </div>
+                            {% if user.is_super_admin %}
+                                <div class="form-group mt-4">
+                                    <label for="risk_response">Risk Response</label>
+                                    {{ form.risk_response }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="risk_owner">Owner <i class="fa fa-user"></i> </label>
+                                    {{ form.risk_owner }}
+                                    <a href="#" class="pull-right small">+ Create Dept</a>
+                                </div>
+                                <div class="form-group">
+                                    <label for="risk_budget">Budget</label>
+                                    <div class="d-flex budget-input">
+                                        {{ form.risk_budget }}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="is_closed">Closed</label>
+                                    {{ form.is_closed }}
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                  </label>
+                            {% endif %}
                         </form>
                     </div>
                 </div>
@@ -24,4 +63,48 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Extra small devices (portrait phones, less than 576px) */
+    /* No media query since this is the default in Bootstrap */
+    #risk_budget_0{
+            /* input */
+            border-radius: 10px 0 0 10px;
+            height: auto;
+            flex-grow: 1;
+        }
+        #risk_budget_0 + div{
+            width: 123px;
+        }
+        .budget-input .dropdown-toggle{
+            /* btn dropdown trigger */
+            border-radius: 0 10px 10px 0;
+            height: 100%;
+        }
+
+    /* Small devices (landscape phones, 576px and up) */
+    @media (min-width: 576px) {
+
+    }
+
+    /* Medium devices (tablets, 768px and up) */
+    @media (min-width: 768px) {
+    /* md upwards */
+    }
+
+    /* Large devices (desktops, 992px and up) */
+    @media (min-width: 992px) {
+    /* lg upwards */
+    }
+
+    /* Extra large devices (large desktops, 1200px and up) */
+    @media (min-width: 1200px) {
+    /* xl upwards */
+    }
+
+    /* XXL devices (larger desktops, 1400px and up) */
+    @media (min-width: 1400px) {
+    /* xxl upwards */
+    }
+</style>
 {% endblock main_content %}

@@ -3,14 +3,16 @@ from django.http.response import HttpResponseRedirect
 from django.urls import reverse_lazy
 from .models import Risk
 from .forms import AddRiskForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 
-class Dashboard(g.TemplateView):
+
+class Dashboard(LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/home.html"
 
 
-class AddRisk(g.CreateView):
+class AddRisk(LoginRequiredMixin, g.CreateView):
     template_name = "risk_manager/add_risk.html"
     form_class = AddRiskForm
     model = Risk

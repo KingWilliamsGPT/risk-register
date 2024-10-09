@@ -90,7 +90,7 @@
 														<img alt="image" width="50" src="images/avatar/1.jpg">
 													</div>
 													<div class="media-body">
-														<h6 class="mb-1">Dr sultads Send you Photo</h6>
+														<h6 class="mb-1">A new risk was added to a department you are in.</h6>
 														<small class="d-block">29 July 2020 - 02:26 PM</small>
 													</div>
 												</div>
@@ -477,6 +477,7 @@
 	<script src="js/dashboard/dashboard-1.js"></script>
     <script src="js/custom.min.js"></script>
 	<script src="js/deznav-init.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script>
 		function carouselReview(){
 			/*  testimonial one function by = owl.carousel.js */
@@ -530,5 +531,65 @@
 			});
 		});
 	</script>
+	<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+
 
 {% endblock contents %}
+
+
+{% block more_head %}
+	<style>
+		.header{
+		}
+
+		.switch {
+		position: relative;
+		display: inline-block;
+		width: 60px;
+		height: 34px;
+		}
+
+		.switch input {
+		opacity: 0;
+		width: 0;
+		height: 0;
+		}
+
+		.slider {
+		position: absolute;
+		cursor: pointer;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #ccc;
+		transition: .4s;
+		border-radius: 34px;
+		}
+
+		.slider:before {
+		position: absolute;
+		content: "";
+		height: 26px;
+		width: 26px;
+		left: 4px;
+		bottom: 4px;
+		background-color: white;
+		transition: .4s;
+		border-radius: 50%;
+		}
+
+		input:checked + .slider {
+		background-color: #2196F3;
+		}
+
+		input:checked + .slider:before {
+		transform: translateX(26px);
+		}
+
+		.toggle{
+			display: none;
+		}
+	</style>
+	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+{% endblock more_head %}

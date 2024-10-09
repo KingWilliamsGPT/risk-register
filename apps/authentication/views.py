@@ -1,7 +1,8 @@
 # import this to require login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # import this for sending email to user
 from django.contrib.auth.tokens import default_token_generator

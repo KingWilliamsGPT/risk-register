@@ -1,7 +1,8 @@
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm, SetPasswordForm
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.forms import forms
 
+User = get_user_model()
 
 # uncomment this if you want to change the class/design of the login form
 class UserLoginForm(AuthenticationForm):
