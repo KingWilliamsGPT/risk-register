@@ -1,14 +1,201 @@
 {% extends "./risk_register_base.html" %}
+{% load static %}
 
 
+{% block more_scripts %}
+
+<script type="text/javascript">
+        k = undefined;
+        $(document).ready(()=>{
+            let prob, impact;
+            const rmap = ['', 'cyan', 'green', 'yellow', 'orange', 'red'];
+
+            function addIndicatorToProbOrImpact(e){
+                // e better be a jquery object
+                e.removeClass(['s1', 's2', 's3', 's4', 's5'])
+                e.addClass('s' + String(e.val() || 0));
+            }
+
+            function getRatingColor(prob, impact){
+                const colors = ['teal', 'cyan', 'green', 'yellow', 'orange', 'red'];
+                const ranges = [
+                    [1,2],    // cyan very_low
+                    [3,3],    // green low  
+                    [4,9],    // medium yellow  
+                    [10,12],  // high orange
+                    [15,16],  // very high red
+                    [20,25],  // extreme oxblood
+                ]
+                const rating = prob * impact;
+
+                if (prob == impact && (prob == 2 || prob == 3)){
+                    return colors[1];
+                }else {
+                    let i = 0;
+                    for(let [a, b] of ranges){
+                        if(a <= rating && rating <= b){
+                            return colors[i];
+                        }
+                        i++;
+                    }
+                }
+            }
+
+            $('.with-indicator select').on('change', (e)=>{
+                addIndicatorToProbOrImpact($(e.target));
+            });
+
+            // handle rating slider
+            {
+                const prob = $('#probability');
+                const impact = $('#impact');
+                const rating_score = $('#rating-score');
+
+                addIndicatorToProbOrImpact(prob);
+                addIndicatorToProbOrImpact(impact);
+
+                const ratingSlider = $('.rating');
+
+                function changeRating(a, b, ratingSlider){
+                    a = Number(a)
+                    b = Number(b)
+                    r = (a * b) / 25 * 100;
+                    const slider = ratingSlider.find('.inside');
+                    const sliderColor = `var(--bs-${getRatingColor(a, b)})`;
+
+                    slider.css({
+                        transform: `translateX(${-100+r}%)`,
+                        backgroundColor: sliderColor,
+                    })
+                    rating_score.html(`${r}%`);
+                }
+
+                function changeSlider(prob, impact, ratingSlider){
+                    if(prob && impact){
+                        changeRating(prob, impact, ratingSlider)
+                    }
+                }
+
+                prob.on('change', (e)=> changeSlider(
+                    e.target.value, 
+                    impact.val(),
+                    ratingSlider,
+                ));
+                impact.on('change', (e)=> changeSlider(
+                    prob.val(), 
+                    e.target.value,
+                    ratingSlider,
+                ));
+
+                // TODO 
+                // wait until loader has finished loading
+                changeSlider(prob.val(), impact.val(), ratingSlider);
+
+
+                // synch nice looking is_closed checkbox with check box within the form
+                 nice_check = document.querySelector('#nice_checkbox');
+                 other_check = document.querySelector('#is_closed');
+                 const stat = $('#stat');
+                 const s = ['Closed', 'Opened']
+
+                nice_check.addEventListener('click', ()=> {
+                    other_check.checked = nice_check.checked;
+                    stat.html(s[Number(other_check.checked)]);
+                });
+                other_check.addEventListener('click', ()=>{
+                    nice_check.checked = other_check.checked;
+                    stat.html(s[Number(other_check.checked)]);
+                });
+            }
+        });
+</script>
+
+
+{% endblock %}
 
 {% block main_content %}
+
+<style type="text/css">
+    .d-none-soft{
+        display: none;
+    }
+    .with-indicator select + .btn::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      padding: 0px !important;
+      margin: 0px;
+      position: absolute;
+      right: 32px;
+    }
+
+    .with-indicator select.s1 + .btn::before {
+      background-color: var(--bs-cyan) !important;
+    }
+    .with-indicator select.s2 + .btn::before {
+      background-color: var(--bs-green) !important;
+    }
+    .with-indicator select.s3 + .btn::before {
+      background-color: var(--bs-yellow) !important;
+    }
+    .with-indicator select.s4 + .btn::before {
+      background-color: var(--bs-orange) !important;
+    }
+    .with-indicator select.s5 + .btn::before {
+      background-color: var(--bs-red) !important;
+    }
+    .risk-form.closed .card-body::before {
+      content: "";
+      width: 100%;
+      height: calc(100% - 87px);
+      display: block;
+      position: absolute;
+      top: 87px;
+      left: 0;
+      z-index: 3;
+      background: rgba(17, 18, 23, 0.22); /* Semi-transparent background */
+      backdrop-filter: blur(10px); /* Apply blur to background */
+      -webkit-backdrop-filter: blur(10px); /* Safari support */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+      border-radius: 0 0 var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius);
+    }
+    .rating{
+        padding: 0!important;
+        height: 3px;
+        width: 100%;
+        border-radius: 3px;
+        background-color: rgb(230, 230, 230);
+        overflow: hidden;
+    }
+    .rating .inside{
+        height: 100%;
+        width: 100%;
+        background-color: blue;
+        transition: transform ease-out 1s, background-color linear .5s;
+        display: block;
+        transform: translateX(-100%);
+    }
+    [data-theme-version="dark"] .rating {
+      background-color: #333a54 !important;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-10 col-12">
-            <div class="card">
+            <div class="card risk-form">
                 <div class="card-header">
                     <h4 class="card-title">Add Risk</h4>
+
+                    <div class="pull-right d-flex" style="align-items: center;">
+                        <div style="margin-top:-10px; padding-right: 10px !important" id="stat">Closed</div>
+                        <label class="switch pull-right">
+                            <input type="checkbox" id="nice_checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                 </div>
                 <div class="card-body">
                     <div class="basic-form">
@@ -21,16 +208,23 @@
                                 <label for="risk_type">Risk Type</label>
                                 {{ form.risk_type }}
                             </div>  
+
                             <div class="row">
-                                <div class="col-md-6 col-12">
+                                <div class="col-md-6 col-12 with-indicator">
                                     <label for="probability">Probability</label>
                                     {{ form.probability }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 col-12 with-indicator mt-3 mt-md-0">
                                     <label for="impact">Impact</label>
                                     {{ form.impact }}
                                 </div>
                             </div>
+
+                            <div class="px-1 m-0 mt-4">
+                                <label>Rating <span id="rating-score"></span></label>
+                                <div class="rating form-group"><div class="inside"></div></div>
+                            </div>
+
                             {% if user.is_super_admin %}
                                 <div class="form-group mt-4">
                                     <label for="risk_response">Risk Response</label>
@@ -47,15 +241,12 @@
                                         {{ form.risk_budget }}
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group d-none">
                                     <label for="is_closed">Closed</label>
                                     {{ form.is_closed }}
                                 </div>
-                                <label class="switch">
-                                    <input type="checkbox">
-                                    <span class="slider"></span>
-                                  </label>
                             {% endif %}
+
                         </form>
                     </div>
                 </div>
@@ -108,3 +299,5 @@
     }
 </style>
 {% endblock main_content %}
+
+
