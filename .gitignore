@@ -208,3 +208,5 @@ ENV/
 # mkdocs documentation
 /site
 .templ/
+email_logs
+.vscode/
