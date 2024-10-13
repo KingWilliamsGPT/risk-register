@@ -35,13 +35,13 @@ class Risk(models.Model):
     ]
 
     RATING_INFO = {
-        '1-2': ('very low', 'light_green'),
-        '3-3': ('low', 'light_green'),
-        '4-9': ('medium', 'yellow'),
-        '10-12': ('high', 'orange'),
-        '15-16': ('very high', 'red'),
-        '20-25': ('extreme', 'oxblood'),
-        '=2=2': ('low', 'light_green'),
+        '1-2': ('very low', 'rgb(0, 168, 107)'),    # Green
+        '3-3': ('low', 'rgb(153, 204, 0)'),         # Light Green
+        '4-9': ('medium', 'rgb(255, 204, 0)'),      # Yellow
+        '10-12': ('high', 'rgb(255, 149, 0)'),      # Orange
+        '15-16': ('very high', 'rgb(255, 59, 48)'), # Red
+        '20-25': ('extreme', 'rgb(143, 19, 43)'),   # Dark Red
+        '=2=2': ('low', 'rgb(153, 204, 0)'),        # Light Green (same as '3-3')
     }
 
     PROBABILITY_CHOICES = [
@@ -51,6 +51,10 @@ class Risk(models.Model):
         (4, '4 - High'),
         (5, '5 - Very High'),
     ]
+    PROBABILITY_COLORS  = ['rgb(153 204 153)', 'rgb(255 255 153)', 'rgb(247 211 145)', 'rgb(247 173 145)', 'rgb(247 169 164)']
+    PROBABILITY_CHOICES_DICT = dict(PROBABILITY_CHOICES)
+
+    MAX_RATING = 5*5
 
 
     RANGE_1_TO_5 = [
@@ -82,24 +86,27 @@ class Risk(models.Model):
 
     risk_response = models.CharField(max_length=500, blank=True, default='')
     risk_owner = models.ForeignKey("authentication.Department", on_delete=models.CASCADE, related_name='risks')
-    risk_budget = MoneyField(max_digits=10, decimal_places=2, default_currency='NGN')
+    risk_budget = MoneyField(max_digits=10, decimal_places=2, default_currency='NGN', blank=True, null=True)
 
     # completed_actions = models.CharField(max_length=1500, blank=True, null=True)
     # future_actions = models.CharField(max_length=1500, blank=True, null=True)
 
-    is_closed = models.BooleanField(default=False)       # once the risk is closed by an admin it cannot be edited until opened by another admin
+    is_closed = models.BooleanField(blank=True, default=False)       # once the risk is closed by an admin it cannot be edited until opened by another admin
 
 
-    date_opened = models.DateTimeField(auto_now_add=True)
-    date_closed = models.DateTimeField(editable=False, null=True)
-    last_update = models.DateTimeField(auto_now=True)
-    estimated_closing_date = models.DateTimeField()
-    opened_by = models.CharField(max_length=50, blank=True, null=True)
-    closed_by = models.DateTimeField(null=True, blank=True)
+    # date_opened = models.DateTimeField(auto_now_add=True)
+    # date_closed = models.DateTimeField(editable=False, null=True)
+    # last_update = models.DateTimeField(auto_now=True)
+    # estimated_closing_date = models.DateTimeField()
+    # opened_by = models.CharField(max_length=50, blank=True, null=True)
+    # closed_by = models.DateTimeField(null=True, blank=True)
     
 
     def rating(self):
         return self.probability * self.impact
+
+    def rating_percent(self):
+        return self.rating()/self.MAX_RATING * 100
 
     def rating_info(self):
         rating = self.rating()
@@ -118,6 +125,18 @@ class Risk(models.Model):
                     return info_dict(rating_info)
         
         # return info_dict((None, None))
+    
+    def get_prob_label(self):
+        return self.PROBABILITY_CHOICES_DICT[self.probability][3:]
+    
+    def get_prob_color(self):
+        return self.PROBABILITY_COLORS[self.probability-1]
+    
+    def get_impact_label(self):
+        return self.PROBABILITY_CHOICES_DICT[self.impact][3:]
+    
+    def get_impact_color(self):
+        return self.PROBABILITY_COLORS[self.impact-1]
 
     def is_overdue(self):
         # suggested query: find Risk(opened=True. estimated_closing_date<=today)

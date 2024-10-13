@@ -1,0 +1,76 @@
+{% extends "./risk_register_base.html" %}
+{% load static %}
+
+{% block nav_title %}Risk{% endblock nav_title %}
+
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title"> <img src="{% static "icons/search-3d.png" %}" style="height:30px;"> Risk</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped verticle-middle table-responsive-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Risk Description</th>
+                                    <th scope="col">Risk Type</th>
+                                    <th scope="col">Probability</th>
+                                    <th scope="col">Impact</th>
+                                    <th scope="col">Rating</th>
+                                    <th scope="col">Risk Owner</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Date Raised</th>
+                                    <th scope="col" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for risk in risks %}
+                                    <tr>
+                                        <td>{{ risk.risk_description }}</td>
+                                        <td>{{ risk.risk_type }}</td>
+                                        <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_prob_color }}!important;">{{ risk.get_prob_label }}</span></td>
+                                        <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_impact_color }}!important;">{{ risk.get_impact_label }}</span></td>
+                                        <td title="{{ risk.rating_info.tag }}">
+                                            <div class="progress" style="background: rgba(76, 175, 80, .1)" >
+                                                <div class="progress-bar bg-success" style="width: {{ risk.rating_percent }}%; background-color: {{ risk.rating_info.color }}!important;" role="progressbar"><span class="sr-only">70% Complete</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">You{{ risk.owner }}</td>
+                                        <td>{% if risk.is_closed %}
+                                            <span class="badge badge-light light badge-sm">Closed</span>
+                                            {% else %}
+                                            <span class="badge badge-primary light badge-sm">Opened</span>
+                                            {% endif %}</td>
+                                        <td>{{ risk.date_opened }}</td>
+                                        <td class="text-center"><span><a
+                                                    href="javascript:void()" data-bs-toggle="tooltip"
+                                                    data-placement="top" title="Close"><i
+                                                        class="fas fa-times color-danger"></i></a></span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+
+{% block more_scripts %}
+    {{ block.super }}
+    <!-- more scripts -->
+{% endblock %}
+
+{% block more_head %}
+    {{ block.super }}
+{% endblock more_head %}

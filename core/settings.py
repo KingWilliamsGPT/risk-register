@@ -133,6 +133,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+DEFAULT_PROFILE_AVATARS = [f'[avatars/(1).jpg]' for i in range(1, 11)]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -168,3 +170,4 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'djangoexample@gmail.com'
 
 APP_NAME = "Risk register app"
+DEFAULT_PAGINATION_COUNT = 20

@@ -1,6 +1,7 @@
 {% extends "./risk_register_base.html" %}
 {% load static %}
 
+{% block nav_title %}Risk{% endblock nav_title %}
 
 {% block more_scripts %}
 
@@ -127,7 +128,7 @@
       padding: 0px !important;
       margin: 0px;
       position: absolute;
-      right: 32px;
+      right: 10%;
     }
 
     .with-indicator select.s1 + .btn::before {
@@ -199,7 +200,8 @@
                 </div>
                 <div class="card-body">
                     <div class="basic-form">
-                        <form >
+                        <form method='post' action=''>
+                            {% csrf_token %}
                             <div class="form-group">
                                 <label for="risk_description">Risk Description</label>
                                 {{ form.risk_description }}
@@ -247,6 +249,7 @@
                                 </div>
                             {% endif %}
 
+                            <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
                     </div>
                 </div>

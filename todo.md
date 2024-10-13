@@ -4,9 +4,10 @@ TODO
 - turn admins to super admin
 
 -- Frontend
-- Add a javascript on the frontend to automatically calculate risk rating
+- 
 
 ONGOING
 -  
 
 COMPLETED
+- Add a javascript on the frontend to automatically calculate risk rating
