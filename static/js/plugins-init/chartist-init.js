@@ -37,7 +37,9 @@
 			if(res.ok){
 				 data = await res.json();
 				// chart.innerHTML = 'loaded data'+JSON.stringify(data);
-				const chartOpt = {};
+				const chartOpt = {
+					
+				};
 				
 				new Chartist.Pie(chartID, data, chartOpt);
 			}else{
