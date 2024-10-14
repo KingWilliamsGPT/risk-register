@@ -96,7 +96,7 @@ class RiskPieSummary(LoginRequiredMixin, g.View):
         }
 
         for risk in risk_distribution:
-            risk_type, risk_count = risk['risk_type '], risk['count']
+            risk_type, risk_count = risk['risk_type'], risk['count']
             res['series'].append(risk_count)
             res['labels'].append(risk_type)
 
