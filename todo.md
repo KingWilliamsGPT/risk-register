@@ -1,4 +1,8 @@
 TODO
+
+-- FORMS -- 
+- Add error messages on forms: risk
+
 - Creating new admin users
 - Create super admin
 - turn admins to super admin

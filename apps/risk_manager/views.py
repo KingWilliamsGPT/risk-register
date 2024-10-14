@@ -7,7 +7,8 @@ from .models import Risk
 from .forms import AddRiskForm, RiskFilterForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
-
+from django.http import JsonResponse
+from django.db.models import Count
 
 
 
@@ -84,3 +85,19 @@ class RiskStat(LoginRequiredMixin, g.TemplateView):
 
 class RiskPinned(LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/risk_pinned.html"
+
+class RiskPieSummary(LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        risk_distribution = Risk.objects.values('risk_type').annotate(count=Count('id'))
+        
+        res = {   
+            'series': [],
+            'labels': [],
+        }
+
+        for risk in risk_distribution:
+            risk_type, risk_count = risk['risk_type '], risk['count']
+            res['series'].append(risk_count)
+            res['labels'].append(risk_type)
+
+        return JsonResponse(res, safe=False)

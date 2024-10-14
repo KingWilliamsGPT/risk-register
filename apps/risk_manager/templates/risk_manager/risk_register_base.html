@@ -293,67 +293,6 @@
         Main wrapper endhttps://us05web.zoom.us/j/84289077239?pwd=6sx2FRFo0YjC6UoOIuMaP4iIhfNWpI.1
     ***********************************-->
 
-    	<!-- Dashboard 1 -->
-	<script src="js/dashboard/dashboard-1.js"></script>
-    <script src="js/custom.min.js"></script>
-	<script src="js/deznav-init.js"></script>
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script>
-		function carouselReview(){
-			/*  testimonial one function by = owl.carousel.js */
-			jQuery('.testimonial-one').owlCarousel({
-				nav:true,
-				loop:true,
-				autoplay:true,
-				margin:30,
-				dots: false,
-				left:true,
-				navText: ['<i class="fa fa-chevron-left" aria-hidden="true"></i>', '<i class="fa fa-chevron-right" aria-hidden="true"></i>'],
-				responsive:{
-					0:{
-						items:1
-					},
-					484:{
-						items:2
-					},
-					882:{
-						items:3
-					},	
-					1200:{
-						items:2
-					},			
-					
-					1540:{
-						items:3
-					},
-					1740:{
-						items:4
-					}
-				}
-			})			
-		}
-		jQuery(window).on('load',function(){
-			setTimeout(function(){
-				carouselReview();
-			}, 1000); 
-		});
-	</script>
-<!-- 	<script>
-		jQuery(document).ready(function(){
-			setTimeout(function(){
-				dezSettingsOptions.version = 'dark';
-				new dezSettings(dezSettingsOptions);
-			},1000)
-			jQuery(window).on('resize',function(){
-				dezSettingsOptions.version = 'dark';
-				new dezSettings(dezSettingsOptions);
-				jQuery('.dz-theme-mode').addClass('active');
-			});
-		});
-	</script> -->
-	<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
-
-
 {% endblock contents %}
 
 
@@ -410,6 +349,72 @@
 		.toggle{
 			display: none;
 		}
+
+		[data-theme-version="light"] .brand-title{
+			color: black !important;
+		  }
+
 	</style>
 	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
 {% endblock more_head %}
+
+
+{% block more_scripts %}
+	{{ block.super }}
+	<!-- Dashboard 1 -->
+	<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+	<script src="{% static 'js/dashboard/dashboard-1.js' %}"></script>
+	<script>
+		function carouselReview(){
+			/*  testimonial one function by = owl.carousel.js */
+			jQuery('.testimonial-one').owlCarousel({
+				nav:true,
+				loop:true,
+				autoplay:true,
+				margin:30,
+				dots: false,
+				left:true,
+				navText: ['<i class="fa fa-chevron-left" aria-hidden="true"></i>', '<i class="fa fa-chevron-right" aria-hidden="true"></i>'],
+				responsive:{
+					0:{
+						items:1
+					},
+					484:{
+						items:2
+					},
+					882:{
+						items:3
+					},	
+					1200:{
+						items:2
+					},			
+					
+					1540:{
+						items:3
+					},
+					1740:{
+						items:4
+					}
+				}
+			})			
+		}
+		jQuery(window).on('load',function(){
+			setTimeout(function(){
+				carouselReview();
+			}, 1000); 
+		});
+	</script>
+	<!-- 	<script>
+	jQuery(document).ready(function(){
+		setTimeout(function(){
+			dezSettingsOptions.version = 'dark';
+			new dezSettings(dezSettingsOptions);
+		},1000)
+		jQuery(window).on('resize',function(){
+			dezSettingsOptions.version = 'dark';
+			new dezSettings(dezSettingsOptions);
+			jQuery('.dz-theme-mode').addClass('active');
+		});
+	});
+	</script> -->
+{% endblock more_scripts %}
