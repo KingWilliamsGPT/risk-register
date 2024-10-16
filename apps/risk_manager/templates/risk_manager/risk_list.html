@@ -41,7 +41,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center">You{{ risk.owner }}</td>
+                                        <td class="text-center p-0"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}" class="w-100 h-100 m-0 my-0" style="display: block !important; ">{{ risk.risk_owner }}</a></td>
                                         <td>{% if risk.is_closed %}
                                             <span class="badge badge-light light badge-sm">Closed</span>
                                             {% else %}

@@ -1,6 +1,10 @@
 (function($) {
     /* "use strict" */
 
+	function delay(s) {
+		return new Promise(resolve => setTimeout(resolve, s * 1000));
+	}
+	
 
 	var dzChartlist = function(){
 		
@@ -21,10 +25,11 @@
 				jQuery('.chartlist-chart').css('min-width',chartBlockWidth - 31);
 			}
 		}
-		var riskDeptDistribution = async function(){
+		var riskDeptDistribution = async function(apiURL){
 			//Simple pie chart
             const chartID = '#risk-dept-distribution';
             const chart = document.querySelector(chartID);
+			// await delay(4);
 	
 			const res = await fetch(apiURL, {
 				headers: {
@@ -55,7 +60,7 @@
 			
 			load:function(){
 				setChartWidth();	
-				riskDeptDistribution();
+				riskDeptDistribution(SUMMARY_BY_RISK_TYPE_API_URL);
 			},
 			
 			resize:function(){

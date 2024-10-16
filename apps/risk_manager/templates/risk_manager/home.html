@@ -19,7 +19,17 @@
                     <h4 class="card-title">Risk by Category</h4>
                 </div>
                 <div class="card-body">
-                    {% include "./__risk_dept_pie_chart.html" %}
+                    {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Risk by Category</h4>
+                </div>
+                <div class="card-body">
+                    {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
                 </div>
             </div>
         </div>
@@ -40,7 +50,8 @@
     <script src="{% static 'vendor/chartist/js/chartist.min.js' %}"></script>
     <script src="{% static 'vendor/chartist-plugin-tooltips/js/chartist-plugin-tooltip.min.js' %}"></script>
     <script>
-        const apiURL = "{% url 'risk_register:risk_pie_summary' %}";
+        const SUMMARY_BY_RISK_TYPE_API_URL = "{% url 'risk_register:risk_type_summary' %}";
+        const SUMMARY_BY_RISK_RATING_API_URL = "{% url 'risk_register:risk_rating_summary' %}";
     </script>
     <script src="{% static 'js/plugins-init/chartist-init.js' %}"></script>
 	<script src="{% static 'js/custom.min.js' %}"></script>
@@ -49,7 +60,7 @@
 {% endblock %}
 
 {% block more_head %}
-    {{block.super}}
-    <link rel="stylesheet" href="{% static 'vendor/chartist/css/chartist.min.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/chartist/css/chartist.min.css' %}">
+{{block.super}}
 
 {% endblock more_head %}

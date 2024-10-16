@@ -1,6 +1,9 @@
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth import get_user_model
-from django.forms import forms
+from django import forms
+
+from .models import Department
+
 
 User = get_user_model()
 
@@ -100,3 +103,12 @@ class ResetPasswordConfirmForm(SetPasswordForm):
             'placeholder': 'Retype New Password',
             'required': 'True'
         })
+
+
+class AddDepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

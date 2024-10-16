@@ -7,7 +7,7 @@ from django.templatetags.static import static
 
 
 class User(AbstractUser):
-    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, related_name='users')
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, related_name='staffs')
     is_super_admin =  models.BooleanField(blank=True, default=False)            # simply implies some common priviledges like elevated actions on risks
     # can_create_other_admins = models.BooleanField(blank=True, default=False)
     profile_pic = models.CharField(max_length=255, default=random_choice(settings.DEFAULT_PROFILE_AVATARS))
