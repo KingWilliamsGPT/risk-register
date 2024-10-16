@@ -56,20 +56,20 @@
                                     <div class="my-post-content pt-3">
                                         <div class="card">
                                             <div class="card-header  border-0 pb-0">
-                                                <h4 class="text-primary">{{ staffs }} staffs</h4>
+                                                <h4 class="text-primary">{{ staffs|length }} staff{{ staffs|length|pluralize:",s"}}</h4>
                                             </div>
                                             <div class="card-body p-0"> 
                                                 <div id="DZ_W_Todo1" class="widget-media dz-scroll  my-4 px-4 height370">
                                                     <ul class="timeline">
-                                                        {% for i in 1|range:"50" %}
+                                                        {% for staff in staffs %}
                                                             <li>
                                                                 <div class="timeline-panel">
                                                                     <div class="media me-2">
-                                                                        <img alt="image" width="50" src="{{ user.get_profile_url }}">
+                                                                        <img alt="image" width="50" src="{{ staff.get_profile_url }}">
                                                                     </div>
                                                                     <div class="media-body">
-                                                                        <h5 class="mb-1" {% if user.is_super_admin %}style="font-weight: 700"{% endif %}>{{ user.get_display_name }} (HOD)</h5>
-                                                                        {% if user.is_super_admin %}<small class="d-block font-italic">Admin</small>{% endif %}
+                                                                        <h5 class="mb-1" {% if staff.is_super_admin %}style="font-weight: 700"{% endif %}>{{ staff.get_display_name }}</h5>
+                                                                        {% if staff.is_super_admin %}<small class="d-block font-italic">Admin</small>{% endif %}
                                                                     </div>
                                                                     <div class="dropdown">
                                                                         <button type="button" class="btn btn-primary light sharp" data-bs-toggle="dropdown">
