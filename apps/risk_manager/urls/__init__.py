@@ -19,6 +19,8 @@ urlpatterns = [
     path('risk/statistics/', views.RiskStat.as_view(), name='risk_statistics'),
     path('risk/statistics/api/data/pie_for_risk_summary/', views.RiskPieSummary.as_view(), name='risk_type_summary'),
     path('risk/statistics/api/data/pie_for_risk_rating_summary/', views.RiskRatingSummary.as_view(), name='risk_rating_summary'),
+    path('risk/statistics/api/data/super_summary/', views.RiskSuperSummaryView.as_view(), name='risk_super_summary'),
+    path('risk/statistics/api/data/severe_risk_summary/', views.RiskSeveritySummaryView.as_view(), name='risk_severe_summary'),
     path('risk/pinned/', views.RiskPinned.as_view(), name='risk_pinned'),
 
     path('departments/', views.DepartmentListView.as_view(), name='dept_list'),

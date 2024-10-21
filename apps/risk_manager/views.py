@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.views import generic as g
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
@@ -8,6 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
+from djmoney.money import Money
+from django.db.models import F
 
 from apps.authentication.models import Department, User
 from apps.authentication.forms import AddDepartmentForm
@@ -17,13 +19,25 @@ from .forms import AddRiskForm, RiskFilterForm
 from .mixins import SuperUserMixin
 
 DEFAULT_PAGINATION_COUNT = settings.DEFAULT_PAGINATION_COUNT
+DEFAULT_CURRENCY_SYMBOL = '₦'
+MAX_SEVERE_RISKS = 10
 
 from django.core.exceptions import PermissionDenied
+
+
+def get_most_severe_risks(num):
+    return Risk.objects.annotate(
+            severity=F('probability') * F('impact')
+        ).order_by('-severity')[:num]
 
 
 class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/home.html"
 
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS)
+        return super().get_context_data(**kwargs)
 
 class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
     template_name = "risk_manager/add_risk.html"
@@ -127,19 +141,68 @@ class RiskPinned(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
 class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         risk_distribution = Risk.objects.values('risk_type').annotate(count=Count('id'))
+        MAX_LEN_RISK_TYPE = 7
         
-        res = {   
+        res = {
             'series': [],
             'labels': [],
+            'tooltips': []  # Include tooltips for full names
         }
 
         for risk in risk_distribution:
             risk_type, risk_count = risk['risk_type'], risk['count']
+            short_risk_type = (risk_type[:MAX_LEN_RISK_TYPE] + '...') if len(risk_type) > MAX_LEN_RISK_TYPE else risk_type  # Truncate after MAX_LEN_RISK_TYPE chars
+            
             res['series'].append(risk_count)
-            res['labels'].append(f'{risk_type} ({risk_count})')
+            res['labels'].append(f'{short_risk_type} ({risk_count})')
+            res['tooltips'].append(risk_type)  # Full risk type name for tooltip
 
         return JsonResponse(res, safe=False)
 
+
+class RiskSuperSummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        # Aggregate the data
+        opened_risks = Risk.objects.filter(is_closed=False)
+        opened_risks_count = opened_risks.count()
+        closed_risks_count = Risk.objects.filter(is_closed=True).count()
+        
+        # Sum the budgets for opened risks
+        total_budget = opened_risks.aggregate(total_budget=Sum('risk_budget'))['total_budget'] or 0
+        
+        # Get currency symbol from the MoneyField
+        budget_for_opened_risks_str = f"{DEFAULT_CURRENCY_SYMBOL}{total_budget:,.2f}" if total_budget else "₦0.00"
+
+        # Prepare the response data
+        response_data = {
+            "opened_risks": opened_risks_count,
+            "closed_risks": closed_risks_count,
+            "budget_for_opened_risks": budget_for_opened_risks_str,
+        }
+
+        return JsonResponse(response_data)
+
+
+class RiskSeveritySummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        # Get the top 10 most severe risks based on the rating
+        most_severe_risks = get_most_severe_risks(num=10)
+
+        # Prepare the response data
+        response_data = []
+        for risk in most_severe_risks:
+            response_data.append({
+                "risk_id": risk.id,
+                "risk_type": risk.risk_type,
+                "risk_description": risk.risk_description,
+                "probability": risk.probability,
+                "impact": risk.impact,
+                "rating": risk.rating(), 
+                "budget": f"{DEFAULT_CURRENCY_SYMBOL}{risk.risk_budget.amount:,.2f}" if risk.risk_budget else "₦0.00",
+                "date_opened": risk.date_opened.isoformat(),
+            })
+
+        return JsonResponse(response_data, safe=False)
 
 class RiskRatingSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
