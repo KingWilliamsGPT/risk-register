@@ -94,9 +94,9 @@ class Risk(models.Model):
     is_closed = models.BooleanField(blank=True, default=False)       # once the risk is closed by an admin it cannot be edited until opened by another admin
 
 
-    # date_opened = models.DateTimeField(auto_now_add=True)
-    # date_closed = models.DateTimeField(editable=False, null=True)
-    # last_update = models.DateTimeField(auto_now=True)
+    date_opened = models.DateTimeField(auto_now_add=True)
+    date_closed = models.DateTimeField(editable=False, null=True)
+    last_update = models.DateTimeField(auto_now=True)
     # estimated_closing_date = models.DateTimeField()
     # opened_by = models.CharField(max_length=50, blank=True, null=True)
     # closed_by = models.DateTimeField(null=True, blank=True)

@@ -13,22 +13,26 @@
         </div>
     </div>
     <div class='row'>
-        <div class="col-xl-6 col-lg-12">
+        <!-- to preload the bg images -->
+        <div class="bg-loader d-none"></div>
+        <div class="chart-area-no-data d-none"></div>
+
+        <div class="col-sm-6 col-lg-4">
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Risk by Category</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-loader">
                     {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
                 </div>
             </div>
         </div>
-        <div class="col-xl-6 col-lg-12">
+        <div class="col-sm-6 col-lg-4">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header ">
                     <h4 class="card-title">Risk by Category</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-loader">
                     {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
                 </div>
             </div>

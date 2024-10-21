@@ -176,7 +176,7 @@
 							</li> {% endcomment %}
                             <li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="javascript:void(0)" role="button" data-bs-toggle="dropdown">
-                                    <img src="{{ user.get_profile_url }}" width="20" alt="">
+                                    <img src="{{ user.get_profile_url }}" width="20" alt="" class="border-danger" style="{% if user.is_super_admin %}border: 3px solid red;{% endif %}" {% if user.is_super_admin %}title="You are a super admin"{% endif %}>
 									<div class="header-info">
 										<span class="text-black"><strong>{{ user.get_display_name }}</strong></span>
 										<p class="fs-12 mb-0">{{ user.department }}</p>
@@ -264,7 +264,22 @@
             Sidebar end
         ***********************************-->
 
-        
+        <!-- Bootstrap Modal for Flatpickr -->
+	    <div class="modal fade" id="datepickerModal" tabindex="-1" role="dialog" aria-hidden="true">
+	        <div class="modal-dialog modal-dialog-centered" role="document">
+	            <div class="modal-content">
+	                <div class="modal-header">
+	                    <h5 class="modal-title">Select Date</h5>
+	                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	                        <span aria-hidden="true">&times;</span>
+	                    </button>
+	                </div>
+	                <div class="modal-body">
+	                    <!-- Flatpickr will be inserted here -->
+	                </div>
+	            </div>
+	        </div>
+	    </div>
 		
 		<!--**********************************
             Content body start
@@ -357,6 +372,19 @@
 		  .font-italic {
 			font-style: italic !important;
 		}
+
+		.chart-area-no-data,
+		.bg-loader{
+			background: url("{% static 'nodata.jpg' %}");
+			background-position: center;
+			background-size: contain;
+			background-repeat: no-repeat;
+		}
+		.bg-loader{
+			background-image: url("{% static 'loader.gif' %}");
+			background-size: 100px;
+		}
+
 	</style>
 	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
 {% endblock more_head %}
@@ -367,6 +395,9 @@
 	<!-- Dashboard 1 -->
 	<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 	<script src="{% static 'js/dashboard/dashboard-1.js' %}"></script>
+	<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
 	<script>
 		function carouselReview(){
 			/*  testimonial one function by = owl.carousel.js */
@@ -420,4 +451,84 @@
 		});
 	});
 	</script> -->
+
+	<script type="text/javascript">
+		// implement confirm click for most likely confirm deletions
+		
+		function runConfirmClick(){
+			btns = $('.confirm-click');
+			btns.on('click', (e)=>{
+				const elem = $(e.target);
+				const targetUrl = elem.data('confirmTargetUrl');
+				const text = elem.data('confirmText');
+				const link = document.createElement('a');
+				link.setAttribute('href', targetUrl);
+				Swal.fire({
+				  title: "Are you sure?",
+				  text: text || "You won't be able to revert this!",
+				  icon: "warning",
+				  showCancelButton: true,
+				  confirmButtonColor: "#3085d6",
+				  cancelButtonColor: "#d33",
+				  confirmButtonText: "Yes, delete it!"
+				}).then((res)=>{
+					if(res.isConfirmed){
+						link.click();
+					}
+				});
+			});
+		}
+
+		function doCalanderStuff() {
+			// this creates calendar ui for certain elements that look like this
+			// <button data-datepicker-date="2024-01-01">current date [somedate]</button>
+	        $('.show-in-date-picker').each(function() {
+	            var $link = $(this);
+	            var initialDate = $link.data('datepicker-date');
+	            
+	            const picker = $link.flatpickr({
+	                defaultDate: initialDate,
+	                dateFormat: "Y-m-d",
+	                theme: "material_blue",
+	                inline: false,
+	                static: true,
+	                appendTo: document.body, // Append to body for modal compatibility
+	                onClose: function(selectedDates, dateStr) {
+	                    // $link.text(dateStr);
+	                    picker._isOPened = false;
+	                    $('#datepickerModal').modal('hide');
+	                }
+	            });
+	            picker._isOPened = false;
+
+	            $(picker.calendarContainer).css({
+	            	position: 'fixed',
+	            	top: '50%',
+	            	left: '50%',
+	            	transform: "translate(-50%, -50%)",
+	            });
+
+	            // $(picker.calendarContainer).css({
+	            // 	position: 'fixed', 
+	            // 	top: '-50%',
+	            // 	left: '-50%',
+	            // 	// transform: "translate('-50%', '-50%')",
+	            // });
+	            
+	            $link.on('click', function(e) {
+	                e.preventDefault();
+	                // $('#datepickerModal').modal('show');
+	                if (!picker._isOPened){
+		                picker.open();
+		                picker._isOPened = true;
+	                }
+	            });
+	        });
+	    }
+
+		$(document).ready(()=>{
+			runConfirmClick();
+			doCalanderStuff();
+		});
+	</script>
 {% endblock more_scripts %}

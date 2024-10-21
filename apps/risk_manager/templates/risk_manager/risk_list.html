@@ -1,5 +1,6 @@
 {% extends "./risk_register_base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block nav_title %}Risk{% endblock nav_title %}
 
@@ -25,7 +26,7 @@
                                     <th scope="col">Risk Owner</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Date Raised</th>
-                                    <th scope="col" class="text-center">Action</th>
+                                    {% if user.is_super_admin %}<th scope="col" class="text-center">Action</th>{% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -47,12 +48,18 @@
                                             {% else %}
                                             <span class="badge badge-primary light badge-sm">Opened</span>
                                             {% endif %}</td>
-                                        <td>{{ risk.date_opened }}</td>
-                                        <td class="text-center"><span><a
-                                                    href="javascript:void()" data-bs-toggle="tooltip"
-                                                    data-placement="top" title="Close"><i
-                                                        class="fas fa-times color-danger"></i></a></span>
-                                        </td>
+                                        <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}">{{ risk.date_opened|naturaltime }}</a></td>
+                                        {% if user.is_super_admin %}
+                                            <td class="text-center ">
+                                                <div class="d-flex" style="justify-content: space-around;">
+                                                    <span><a
+                                                            href="javascript:void(0)" data-bs-toggle="tooltip"
+                                                            data-placement="top" title="Delete"><i
+                                                                class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}" data-confirm-text=""></i></a></span>
+                                                    <a href="{% url 'risk_register:risk_update' risk.id %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
+                                                </div>
+                                            </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -69,8 +76,20 @@
 {% block more_scripts %}
     {{ block.super }}
     <!-- more scripts -->
+
+    <script src="{% static 'vendor/sweetalert2/sweetalert2.min.js' %}"></script>
+    <script src="{% static 'js/plugins-init/sweetalert.init.js' %}"></script>
 {% endblock %}
 
 {% block more_head %}
     {{ block.super }}
+    <link href="vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <!-- Add Flatpickr CSS with material blue theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    <style>
+        .flatpickr-calendar.open {
+            z-index: 1060 !important; /* Ensure calendar appears above Bootstrap modal */
+        }
+    </style>
 {% endblock more_head %}

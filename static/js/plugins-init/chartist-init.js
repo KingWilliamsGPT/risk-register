@@ -40,12 +40,17 @@
 			});
 			
 			if(res.ok){
-				 data = await res.json();
+				const data = await res.json();
 				// chart.innerHTML = 'loaded data'+JSON.stringify(data);
 				const chartOpt = {
 					
 				};
-				
+				if (!data.series.length){
+					const e = $(chart).parent();
+					e.removeClass('bg-loader');
+					e.addClass('chart-area-no-data');
+					e.attr('title', 'no data was returned, try saving some data.')
+				}
 				new Chartist.Pie(chartID, data, chartOpt);
 			}else{
 				console.log('failed to load risk summary pie chart data');

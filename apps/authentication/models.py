@@ -26,11 +26,14 @@ class Department(models.Model):
     # - ENSURE a department with members cannot be deleted
     
     name = models.CharField(max_length=255)
+    code = models.CharField(max_length=10)
     description = models.CharField(max_length=1500, blank=True, default='')
 
     def __str__(self):
         return self.name
 
+    def get_code(self):
+        return self.code.strip()
 
 
 class GlobalSettings(models.Model):

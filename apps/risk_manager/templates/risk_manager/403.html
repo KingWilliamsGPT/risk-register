@@ -1,0 +1,38 @@
+{% extends "./risk_register_base.html" %}
+{% load static %}
+
+{% block nav_title %}Department{% endblock nav_title %}
+
+
+
+{% block main_content %}
+
+    <div class="authincation h-100">
+        <div class="container h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-5">
+                    <div class="form-input-content text-center error-page">
+                        <h1 class="error-text  font-weight-bold">403</h1>
+                        <h4><i class="fa fa-times-circle text-danger"></i> Access Denied!</h4>
+                        <p>This action is only allowed for super admins.</p>
+                        <div>
+                            <a class="btn btn-primary" href="{% url 'risk_register:home' %}">Back to Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock main_content %}
+
+
+{% block more_scripts %}
+    {{block.super}}
+{% endblock %}
+
+
+
+{% block more_head %}
+    {{block.super}}
+{% endblock %}

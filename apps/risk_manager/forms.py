@@ -1,6 +1,10 @@
 from .models import Risk
 from django import forms
+from djmoney.money import Money
+from django.core.exceptions import ValidationError
 
+
+from apps.authentication.models import Department
 
 class AddRiskForm(forms.ModelForm):
     class Meta:
@@ -50,6 +54,15 @@ class AddRiskForm(forms.ModelForm):
             'id': 'is_closed',
             'data-toggle': "toggle",
         })
+
+    def clean_risk_budget(self):
+        risk_budget = self.cleaned_data.get('risk_budget')
+        
+        # Ensure risk_budget is compared to a Money object with 0 value in the same currency
+        if risk_budget is not None and risk_budget < Money(0, risk_budget.currency):
+            raise ValidationError('Budget cannot be a negative number.')
+        
+        return risk_budget
 
 
 class RiskFilterForm(forms.Form):

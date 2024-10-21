@@ -1,28 +1,31 @@
 from collections.abc import Sequence
 from django.db import models
+from django.db.models import Count
 from django.views import generic as g
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
-from core.settings import DEFAULT_PAGINATION_COUNT
-from apps.authentication.models import Department
-from .models import Risk
-from .forms import AddRiskForm, RiskFilterForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.http import JsonResponse
-from django.db.models import Count
-
+from django.shortcuts import redirect, get_object_or_404
 
 from apps.authentication.models import Department, User
 from apps.authentication.forms import AddDepartmentForm
 
+from .models import Risk
+from .forms import AddRiskForm, RiskFilterForm
+from .mixins import SuperUserMixin
+
+DEFAULT_PAGINATION_COUNT = settings.DEFAULT_PAGINATION_COUNT
+
+from django.core.exceptions import PermissionDenied
 
 
-class Dashboard(LoginRequiredMixin, g.TemplateView):
+class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/home.html"
 
 
-class AddRisk(LoginRequiredMixin, g.CreateView):
+class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
     template_name = "risk_manager/add_risk.html"
     form_class = AddRiskForm
     model = Risk
@@ -36,7 +39,8 @@ class AddRisk(LoginRequiredMixin, g.CreateView):
         return response
 
     def form_invalid(self, form):
-        """If the form is invalid, render the invalid form."""
+        """If the form
+         is invalid, render the invalid form."""
         return self.render_to_response(self.get_context_data(form=form))
 
     def get_context_data(self, **kwargs):
@@ -46,7 +50,7 @@ class AddRisk(LoginRequiredMixin, g.CreateView):
         return super().get_context_data(**kwargs)
     
 
-class RiskListView(LoginRequiredMixin, g.ListView):
+class RiskListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
     model = Risk
     template_name = 'risk_manager/risk_list.html'
     context_object_name = 'risks'
@@ -84,15 +88,43 @@ class RiskListView(LoginRequiredMixin, g.ListView):
         return context
 
 
-class RiskStat(LoginRequiredMixin, g.TemplateView):
+class RiskDeleteView(SuperUserMixin, LoginRequiredMixin, g.View):
+    model = Risk
+    success_url = reverse_lazy('risk_register:risk_list')  # Replace with your desired redirect URL
+    super_admin_only = True
+    
+    def get(self, request, pk):
+        # the issue here is if users accidently navigate using get request data might be loss, but I don't want or need
+        j = self.model.objects.all().filter(id=pk).delete()
+        return redirect(self.success_url)
+
+
+class RiskDetailView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
+    model = Risk
+    template_name = "risk_manager/risk_update.html"
+    form_class = AddRiskForm
+    context_object_name = 'risk'
+
+    def get_success_url(self):
+        # Redirect to the detail view of the updated risk after successful form submission
+        return reverse_lazy('risk_register:risk_update', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        context = super().get_context_data(**kwargs)        
+        context['form'] = self.form_class(instance=self.object)
+        return context
+
+
+class RiskStat(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/risk_statistics.html"
 
 
-class RiskPinned(LoginRequiredMixin, g.TemplateView):
+class RiskPinned(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/risk_pinned.html"
 
 
-class RiskPieSummary(LoginRequiredMixin, g.View):
+class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         risk_distribution = Risk.objects.values('risk_type').annotate(count=Count('id'))
         
@@ -108,7 +140,8 @@ class RiskPieSummary(LoginRequiredMixin, g.View):
 
         return JsonResponse(res, safe=False)
 
-class RiskRatingSummary(LoginRequiredMixin, g.View):
+
+class RiskRatingSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         risk_distribution = Risk.objects.annotate(
             rating=models.F('probability') * models.F('impact')
@@ -129,15 +162,14 @@ class RiskRatingSummary(LoginRequiredMixin, g.View):
         return JsonResponse(res, safe=False)
 
 
-class DepartmentListView(LoginRequiredMixin, g.ListView):
+class DepartmentListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
     model = Department
     template_name = 'risk_manager/departments/list.html'
     context_object_name = 'departments'
     paginate_by = settings.DEFAULT_PAGINATION_COUNT  # Show 10 risks per page
 
 
-
-class DepartmentAddView(LoginRequiredMixin, g.CreateView):
+class DepartmentAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):
     # TODO:
     # - instead of redirecting to the department list view go to the detail page after creating a department
     template_name = "risk_manager/departments/add.html"
@@ -161,7 +193,7 @@ class DepartmentAddView(LoginRequiredMixin, g.CreateView):
         return super().get_context_data(**kwargs)
 
 
-class DepartmentDetailView(LoginRequiredMixin, g.DetailView):
+class DepartmentDetailView(SuperUserMixin, LoginRequiredMixin, g.DetailView):
     model = Department
     template_name = "risk_manager/departments/details.html"
     context_object_name = 'department'
@@ -176,7 +208,10 @@ class DepartmentDetailView(LoginRequiredMixin, g.DetailView):
         return super().get_context_data(**kwargs)
 
 
-class DepartmentUpdateView(LoginRequiredMixin, g.UpdateView):
+class DepartmentUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
     model = Department
     template_name = "risk_manager/departments/update.html"
 
+
+class Page403(LoginRequiredMixin, g.TemplateView):
+    template_name = 'risk_manager/403.html'

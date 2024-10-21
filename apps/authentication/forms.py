@@ -112,3 +112,26 @@ class AddDepartmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.fields['name'].widget.attrs.update({
+            'class': 'form-control',
+            'required': 'true',
+            'id': 'dept_name',
+            'placeholder': 'eg. Financial Department',
+        })
+
+        self.fields['code'].widget.attrs.update({
+            'class': 'form-control',
+            'id': 'dept_code',
+            'required': 'true',
+            'placeholder': 'eg. FIN-DEPT'
+        })
+
+        mx = Department.description.field.max_length
+        self.fields['description'].widget = forms.Textarea()  
+        self.fields['description'].widget.attrs.update({
+            'class': 'form-control',
+            'id': 'dept_desc',
+            'placeholder': f'brief description of department, max characters {mx}',
+            'maxlength': str(mx),
+        })

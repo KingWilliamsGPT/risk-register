@@ -187,7 +187,7 @@
         <div class="col-md-10 col-12">
             <div class="card risk-form">
                 <div class="card-header">
-                    <h4 class="card-title">Add Risk</h4>
+                    <h4 class="card-title">Update Risk</h4>
 
                     <div class="pull-right d-flex" style="align-items: center;">
                         <div style="margin-top:-10px; padding-right: 10px !important" id="stat">Closed</div>
@@ -203,6 +203,18 @@
                         <form method='post' action=''>
                             {% csrf_token %}
                             <p>{% for message in messages %}{{message}}{% endfor %}</p>
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        {% for field, errors in form.errors.items %}
+                                            <li>{{ field }}: {{ errors|striptags }}</li>
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
                             <div class="form-group">
                                 <label for="risk_description">Risk Description <span class="text-danger">*</span></label>
                                 {{ form.risk_description }}
@@ -251,6 +263,7 @@
                             {% endif %}
 
                             <button type="submit" class="btn btn-primary">Submit</button>
+                            <a href="javascript:void(0)" class="btn btn-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}">Delete</a>
                         </form>
                     </div>
                 </div>
