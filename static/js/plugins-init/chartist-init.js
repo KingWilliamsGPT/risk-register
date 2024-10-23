@@ -202,7 +202,7 @@
 				const now = new Date();
 				const startDate = (isDaily ? new Date(now.getTime() - (14 * 24 * 60 * 60 * 1000)) // 2 weeks
 								                          : new Date(now.setMonth(now.getMonth() - 24))); // 24 months
-				const endDate = now;
+				const endDate = new Date();
 
 				_updateProgressChart(apiURL, startDate, endDate, view, progressChart);
 
