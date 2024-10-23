@@ -10,6 +10,9 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from djmoney.money import Money
 from django.db.models import F
+from django.utils import timezone
+from datetime import timedelta, datetime
+from django.db.models.functions import ExtractDay, ExtractMonth, ExtractYear
 
 from apps.authentication.models import Department, User
 from apps.authentication.forms import AddDepartmentForm
@@ -30,6 +33,15 @@ def get_most_severe_risks(num):
             severity=F('probability') * F('impact')
         ).order_by('-severity')[:num]
 
+def _make_aware(date):
+    return timezone.make_aware(
+        date,
+        timezone.get_current_timezone()
+    )
+
+def _from_iso(isodate):
+    isodate = isodate[:-1] if isodate.upper().endswith('Z') else isodate
+    return timezone.datetime.fromisoformat(isodate)
 
 class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/home.html"
@@ -223,6 +235,88 @@ class RiskRatingSummary(SuperUserMixin, LoginRequiredMixin, g.View):
             res['labels'].append(label)
 
         return JsonResponse(res, safe=False)
+
+
+class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        # Retrieve query parameters
+        view = request.GET.get('view', 'daily')
+        start_date = request.GET.get('startDate')
+        end_date = request.GET.get('endDate')
+
+        # Parse dates
+        start_date = _from_iso(start_date) if start_date else timezone.now() - timedelta(days=14)
+        end_date = _from_iso(end_date) if end_date else timezone.now()
+
+        start_date, end_date = min(start_date, end_date), max(start_date, end_date)
+
+        # Set date extraction logic based on view (daily or monthly)
+        labels = []
+        opened_risks_data = []
+        closed_risks_data = []
+
+        if view == 'daily':
+            days_range = (end_date - start_date).days + 1
+            labels = [(start_date + timedelta(days=i)).strftime('%d %b') for i in range(days_range)]
+            opened_risks_data = [0] * days_range
+            closed_risks_data = [0] * days_range
+
+            # Get opened risks and closed risks grouped by day
+            opened_risks = Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))\
+                .annotate(day=ExtractDay('date_opened')).values('day').annotate(count=Count('id')).order_by('day')
+            closed_risks = Risk.objects.filter(is_closed=True, date_closed__range=(start_date, end_date))\
+                .annotate(day=ExtractDay('date_closed')).values('day').annotate(count=Count('id')).order_by('day')
+
+            # Populate opened_risks_data and closed_risks_data
+            for entry in opened_risks:
+                day = entry['day']
+                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - start_date).days
+                if 0 <= index < days_range:
+                    opened_risks_data[index] = entry['count']
+
+            for entry in closed_risks:
+                day = entry['day']
+                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - start_date).days
+                if 0 <= index < days_range:
+                    closed_risks_data[index] = entry['count']
+
+        elif view == 'monthly':
+            months_range = ((end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1)
+            labels = [(start_date + timedelta(days=i*30)).strftime('%b %Y') for i in range(months_range)]
+            opened_risks_data = [0] * months_range
+            closed_risks_data = [0] * months_range
+
+            # Get opened risks and closed risks grouped by month and year
+            opened_risks = Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))\
+                .annotate(month=ExtractMonth('date_opened'), year=ExtractYear('date_opened'))\
+                .values('year', 'month').annotate(count=Count('id')).order_by('year', 'month')
+            closed_risks = Risk.objects.filter(is_closed=True, date_closed__range=(start_date, end_date))\
+                .annotate(month=ExtractMonth('date_closed'), year=ExtractYear('date_closed'))\
+                .values('year', 'month').annotate(count=Count('id')).order_by('year', 'month')
+
+            # Populate opened_risks_data and closed_risks_data
+            for entry in opened_risks:
+                year = entry['year']
+                month = entry['month']
+                index = (year - start_date.year) * 12 + (month - start_date.month)
+                if 0 <= index < months_range:
+                    opened_risks_data[index] = entry['count']
+
+            for entry in closed_risks:
+                year = entry['year']
+                month = entry['month']
+                index = (year - start_date.year) * 12 + (month - start_date.month)
+                if 0 <= index < months_range:
+                    closed_risks_data[index] = entry['count']
+
+        # Prepare the response data
+        response_data = {
+            'labels': labels,
+            'opened_risks': opened_risks_data,
+            'closed_risks': closed_risks_data,
+        }
+
+        return JsonResponse(response_data)
 
 
 class DepartmentListView(SuperUserMixin, LoginRequiredMixin, g.ListView):

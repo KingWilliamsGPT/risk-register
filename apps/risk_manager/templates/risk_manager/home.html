@@ -7,44 +7,46 @@
 
 {% block main_content %}
 <div class="container-fluid">
+
     <div class="row">
         <div class="col-12 pb-4">
             <h1>Hi, {{user.get_display_name}}</h1>
-
         </div>
     </div>
+
     <div class="row">
-                    <div class="col-sm-4 col-lg-">
-                        <div class="card">
-                            <div class="card-header pb-0 border-0 pb-3">
-                                <div class="me-auto pe-3">
-                                    <h4 class="text-black fs-20" id="risk_opened">0</h4>
-                                    <span>Opened Risks</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-4 col-lg-">
-                        <div class="card">
-                            <div class="card-header pb-0 border-0 pb-3">
-                                <div class="me-auto pe-3">
-                                    <h4 class="text-black fs-20" id="risk_closed">0</h4>
-                                    <span>Closed Risks</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-4 col-lg-">
-                        <div class="card">
-                            <div class="card-header pb-0 border-0 pb-3">
-                                <div class="me-auto pe-3">
-                                    <h4 class="text-black fs-20" id="risk_budget_opened">₦0.00</h4>
-                                    <span>Budget for Opened Risks</span>
-                                </div>
-                            </div>
-                        </div>
+        <div class="col-sm-4 col-lg-">
+            <div class="card">
+                <div class="card-header pb-0 border-0 pb-3">
+                    <div class="me-auto pe-3">
+                        <h4 class="text-black fs-20" id="risk_opened">0</h4>
+                        <span>Opened Risks</span>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="col-sm-4 col-lg-">
+            <div class="card">
+                <div class="card-header pb-0 border-0 pb-3">
+                    <div class="me-auto pe-3">
+                        <h4 class="text-black fs-20" id="risk_closed">0</h4>
+                        <span>Closed Risks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4 col-lg-">
+            <div class="card">
+                <div class="card-header pb-0 border-0 pb-3">
+                    <div class="me-auto pe-3">
+                        <h4 class="text-black fs-20" id="risk_budget_opened">₦0.00</h4>
+                        <span>Budget for Opened Risks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class='row'>
         <!-- to preload the bg images -->
         <div class="bg-loader d-none"></div>
@@ -60,42 +62,64 @@
                 </div>
             </div>
         </div>
+
         <div class="col-sm-12 col-md-6">
             <div class="card">
                 <div class="card-header ">
                     <h4 class="card-title">Top Risks</h4>
                 </div>
                 <div class="card-body no-bg p-0">
-                        <div id="DZ_W_Todo3" class="widget-media  my-4 px-4 dz-scroll height370">
-                            <ul class="timeline">
-                                {% for risk in severe_risks %}
-                                    <li>
-                                        <div class="timeline-panel">
-                                            <div class="media-body">
-                                                <h5 class="mb-1"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}">{{ risk.risk_owner }}</a> <small class="text-muted">{{ risk.date_opened }}</small></h5>
-                                                <p>{{ risk.risk_description|trim:"40" }}</p>
-                                                <div class="progress">
-                                                    <div class="progress-bar bg-primary" style="width: {{ risk.rating_percent }}%"></div>
-                                                </div>
-                                            </div>
-                                            <div class="dropdown">
-                                                <button type="button" class="btn btn-primary light sharp" data-bs-toggle="dropdown">
-                                                    <svg width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <a class="dropdown-item" href="#">View</a>
-                                                    <a class="dropdown-item" href="#">Pin</a>
-                                                </div>
+                    <div id="DZ_W_Todo3" class="widget-media  my-4 px-4 dz-scroll height370">
+                        <ul class="timeline">
+                            {% for risk in severe_risks %}
+                                <li>
+                                    <div class="timeline-panel">
+                                        <div class="media-body">
+                                            <h5 class="mb-1"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}">{{ risk.risk_owner }}</a> <small class="text-muted">{{ risk.date_opened }}</small></h5>
+                                            <p title="{{ risk.risk_description }}">{{ risk.risk_description|trim:"40" }}</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" style="width: {{ risk.rating_percent }}%"></div>
                                             </div>
                                         </div>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn btn-primary light sharp" data-bs-toggle="dropdown">
+                                                <svg width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end">
+                                                <a class="dropdown-item" href="{% url 'risk_register:risk_update' risk.id %}">View</a>
+                                                <a class="dropdown-item" href="#">Pin</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Daily Risk</h4>
+                    <div class="pull-right">
+                        <select class="open-risk-progress">
+                          <option value="daily">Daily View</option>
+                          <option value="monthly">Montly View</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body" style="height: 326px; overflow-x: auto; width: 100%;">
+                    <!-- <div id="daily-montly-risk-progress" class="ct-chart ct-golden-section chartlist-chart"  style="overflow-x: scroll; overflow-y: hidden;"></div> -->
+                    <canvas id="daily-montly-risk-progress" width="1200"></canvas> 
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock main_content %}
 
@@ -114,6 +138,8 @@
     <script src="{% static 'js/plugins-init/chartist-init.js' %}"></script>
 	<script src="{% static 'js/custom.min.js' %}"></script>
 	<script src="{% static 'js/deznav-init.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     
 {% endblock %}
 
