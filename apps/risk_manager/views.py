@@ -34,10 +34,14 @@ def get_most_severe_risks(num):
         ).order_by('-severity')[:num]
 
 def _make_aware(date):
-    return timezone.make_aware(
-        date,
-        timezone.get_current_timezone()
-    )
+    try:
+        data = timezone.make_aware(
+            date,
+            timezone.get_current_timezone()
+        )
+    except Exception:
+        data = date
+    return data
 
 def _from_iso(isodate):
     isodate = isodate[:-1] if isodate.upper().endswith('Z') else isodate
@@ -270,13 +274,13 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
             # Populate opened_risks_data and closed_risks_data
             for entry in opened_risks:
                 day = entry['day']
-                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - start_date).days
+                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - _make_aware(start_date)).days
                 if 0 <= index < days_range:
                     opened_risks_data[index] = entry['count']
 
             for entry in closed_risks:
                 day = entry['day']
-                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - start_date).days
+                index = (_make_aware(timezone.datetime(start_date.year, start_date.month, day)) - _make_aware(start_date)).days
                 if 0 <= index < days_range:
                     closed_risks_data[index] = entry['count']
 
