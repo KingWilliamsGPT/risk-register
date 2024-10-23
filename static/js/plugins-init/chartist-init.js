@@ -149,7 +149,7 @@
 		            progressChart.data.labels = data.labels || [];
 		            progressChart.update();
 		        } else {
-		            console.log(`Failed to load data for view ${view}`)  
+		            console.log(`Failed to load data for view ${view}`);
 		        }
 		    } catch (error) {
 		        console.error(`Error fetching data for view ${view}:`, error);
@@ -157,7 +157,7 @@
 		}
 
 		var dailyMontlyRiskProgress = async function(apiURL){
-			const select_progress_view = $('.open-risk-progress');
+			 select_progress_view = $('.open-risk-progress');
 
 			const chartCanvas = document.getElementById('daily-montly-risk-progress');
 			const ctx = chartCanvas.getContext('2d');
@@ -194,9 +194,7 @@
 			    }
 			});
 
-			select_progress_view.on('change', async (e)=>{
-				// update the chart view
-				const view = e.target.value; // either daily or monthly
+			var updateProgressChart = async (view)=>{
 				const isDaily = (view == 'daily');
 
 				const now = new Date();
@@ -205,8 +203,17 @@
 				const endDate = new Date();
 
 				_updateProgressChart(apiURL, startDate, endDate, view, progressChart);
+			}
 
+			select_progress_view.on('change', async (e)=>{
+				// update the chart view
+				const view = e.target.value; // either daily or monthly
+				updateProgressChart(view);
 			});
+
+
+			const view = select_progress_view.find('select').val()
+			updateProgressChart(view);
 		}
 
 
