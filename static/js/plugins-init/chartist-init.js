@@ -149,7 +149,7 @@
 		            progressChart.data.labels = data.labels || [];
 		            progressChart.update();
 		        } else {
-		            console.log(`Failed to load data for view ${view}`);
+		            console.log(`Failed to load data for view ${view}`)  
 		        }
 		    } catch (error) {
 		        console.error(`Error fetching data for view ${view}:`, error);
