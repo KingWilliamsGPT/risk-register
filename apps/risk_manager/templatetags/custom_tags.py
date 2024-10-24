@@ -26,3 +26,11 @@ def trim(value, arg):
     if len(value) > length:
         return value[:length] + "..."
     return value
+
+@register.filter
+def dir(value, *_):
+    """
+    Trims the text to the specified number of characters and adds ellipses.
+    Usage: {{ long_text|trim:"10" }}
+    """
+    return str(builtins.dir(value))

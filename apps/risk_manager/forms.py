@@ -70,3 +70,10 @@ class RiskFilterForm(forms.Form):
     probability = forms.ChoiceField(choices=[('', 'All')] + Risk.PROBABILITY_CHOICES, required=False)
     impact = forms.ChoiceField(choices=[('', 'All')] + Risk.PROBABILITY_CHOICES, required=False)
     is_closed = forms.ChoiceField(choices=[('', 'All'), ('True', 'Closed'), ('False', 'Open')], required=False)
+   
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['risk_type'].widget.attrs.update({
+            'class': 'form-control',
+            'id': 'risk_type',
+        })

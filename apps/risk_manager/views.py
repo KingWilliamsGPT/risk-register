@@ -84,7 +84,7 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
     model = Risk
     template_name = 'risk_manager/risk_list.html'
     context_object_name = 'risks'
-    paginate_by = settings.DEFAULT_PAGINATION_COUNT  # Show 10 risks per page
+    paginate_by = 3 #settings.DEFAULT_PAGINATION_COUNT  # Show 10 risks per page
 
     def get_queryset(self):
         super().get_queryset
