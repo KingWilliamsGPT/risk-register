@@ -21,7 +21,7 @@
                                         <i class="flaticon-381-search-2"></i>
                                     </button>
                               </span>
-                              <input type="text" class="form-control " placeholder="Search here" title="Search for risks">
+                              <input type="text" id="search_string" name="search_string" class="form-control " placeholder="Search here" title="Search for risks">
                             </div>
                         </form>
                         <div>
@@ -56,10 +56,16 @@
                                         {{ form.impact }}
                                     </div>
                                     <div class="col-sm-3 mt-3 mt-sm-0">
-                                        <label class="small" for="impact">Closed:</label>
+                                        <label class="small" for="is_closed">Closed:</label>
                                         {{ form.is_closed }}
                                     </div>
-                                    <input type="number" name="page" hidden class="d-none" value="{{ page_obj.number }}">
+                                    <script type="text/javascript">
+                                        var CURRENT_PAGE_NUMBER = "#{{ page_obj.number }}";
+                                        const RISK_TYPE_ID = "#{{ form.risk_type.auto_id }}";
+                                        const PROBABILITY_ID = "#{{ form.probability.auto_id }}";
+                                        const IMPACT_ID = "#{{ form.impact.auto_id }}";
+                                        const IS_CLOSED_ID = "#{{ form.is_closed.auto_id }}";
+                                    </script>
                                 </div>
 
                             </form>
@@ -81,7 +87,7 @@
                                     {% if user.is_super_admin %}<th scope="col" class="text-center">Action</th>{% endif %}
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tbody">
                                 {% for risk in risks %}
                                     <tr>
                                         <td title="{{risk.risk_description}}"><a href="{% url 'risk_register:risk_update' risk.id %}">{{ risk.risk_description|trim:"30" }}</a></td>
@@ -118,7 +124,7 @@
                         </table>
                     </div>
 
-                    <div>
+                    <div  class="w-100" style="overflow: auto!important;">
                         <nav aria-label="Page navigation" id="risk_list_pagination">
                             <ul class="pagination justify-content-end mb-0">
                                 <!-- Previous Page -->
@@ -131,7 +137,7 @@
                                     {% if page_num == page_obj.number %}
                                         <!-- Current Page -->
                                         <li class="page-item active">
-                                            <a class="page-link" data-page-number="" href="#">{{ page_num }} <span class="sr-only">(current)</span></a>
+                                            <a class="page-link" data-page-number="{{ page_num }}" href="#">{{ page_num }} <span class="sr-only">(current)</span></a>
                                         </li>
                                     {% else %}
                                         <!-- Other Pages -->
@@ -143,7 +149,7 @@
 
                                 <!-- Next Page -->
                                 <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                                    <a class="page-link" data-page-number="{% if page_obj.has_next %}{{ page_obj.previous_page_number }}{% endif %}" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+                                    <a class="page-link" data-page-number="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
                                 </li>
                             </ul>
                         </nav>

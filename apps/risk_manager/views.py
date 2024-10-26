@@ -20,6 +20,7 @@ from apps.authentication.forms import AddDepartmentForm
 from .models import Risk
 from .forms import AddRiskForm, RiskFilterForm
 from .mixins import SuperUserMixin
+from .utils import render_template
 
 DEFAULT_PAGINATION_COUNT = settings.DEFAULT_PAGINATION_COUNT
 DEFAULT_CURRENCY_SYMBOL = '₦'
@@ -80,14 +81,21 @@ class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         return super().get_context_data(**kwargs)
     
 
-class RiskListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.generic import ListView
+from .models import Risk
+from .forms import RiskFilterForm
+
+class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
     model = Risk
     template_name = 'risk_manager/risk_list.html'
+    template_name_part = 'risk_manager/risk_list_part.html'
+    template_name_part2 = 'risk_manager/risk_list_pagination_part.html'
     context_object_name = 'risks'
-    paginate_by = 3 #settings.DEFAULT_PAGINATION_COUNT  # Show 10 risks per page
+    paginate_by = 1 #settings.DEFAULT_PAGINATION_COUNT
 
     def get_queryset(self):
-        super().get_queryset
         queryset = Risk.objects.all()
         self.filter_form = form = RiskFilterForm(self.request.GET)
 
@@ -96,6 +104,7 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
             probability = form.cleaned_data.get('probability')
             impact = form.cleaned_data.get('impact')
             is_closed = form.cleaned_data.get('is_closed')
+            search_string = form.cleaned_data.get('search_string')
 
             if risk_type:
                 queryset = queryset.filter(risk_type=risk_type)
@@ -105,17 +114,59 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
                 queryset = queryset.filter(impact=impact)
             if is_closed:
                 queryset = queryset.filter(is_closed=is_closed == 'True')
+            if search_string:
+                queryset = queryset.filter(
+                    models.Q(risk_description__icontains=search_string) | 
+                    models.Q(risk_type__icontains=search_string) | 
+                    models.Q(risk_owner__name__icontains=search_string) |
+                    models.Q(risk_owner__code__icontains=search_string) |
+                    models.Q(risk_owner__description__icontains=search_string)
+                )
 
-        return queryset.order_by(*self.get_ordering()) 
+
+        return queryset.order_by(*self.get_ordering())
 
     def get_ordering(self):
-        form = self.filter_form  # should be defined by now
         return ('-id', )
+
+    def get_paginated_data(self, queryset):
+        paginator = Paginator(queryset, self.paginate_by)
+        page_number = self.request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        # Include complete pagination context for AJAX handling
+        data = {
+            'risks': list(page_obj.object_list.values()),  # Convert queryset to list of dicts
+            'page': page_obj.number,
+            'pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'is_paginated': paginator.num_pages > 1,
+        }
+        self.data = data
+        return data
+
+    def get(self, request, *args, **kwargs):
+        if self.is_fetched_request(request):
+            # if using fetched request just return the html in parts, I could return json but that will mean more rendering logic on the frontend.
+            self.template_name = self.template_name_part
+            risk_html = super().get(request, *args, **kwargs).render().content.decode()
+            self.get_paginated_data(self.object_list)
+            pagination_html = render_template(self.template_name_part2, self.data)
+            return JsonResponse({
+                'risk_html': risk_html,
+                'pagination_html': pagination_html,
+            }, safe=False)
+
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = RiskFilterForm(self.request.GET)
         return context
+
 
 
 class RiskDeleteView(SuperUserMixin, LoginRequiredMixin, g.View):

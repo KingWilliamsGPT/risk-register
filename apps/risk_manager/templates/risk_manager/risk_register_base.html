@@ -397,6 +397,7 @@
 			risk_rating: "{% url 'risk_register:risk_rating_summary' %}",
 			risk_super_summary: "{% url 'risk_register:risk_super_summary' %}",
 			risk_progress: "{% url 'risk_register:risk_progress' %}",
+			risk_list: "{% url 'risk_register:risk_list' %}",
 		}
     </script>
 	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
@@ -545,7 +546,21 @@
 	    function handleRiskListView(){
 	    	const filterBtn = $('#filter-btn');
 	    	const filterTools = $('.filter-tools');
+    		const risk_type = $(RISK_TYPE_ID);
+    		const probability = $(PROBABILITY_ID);
+    		const impact = $(IMPACT_ID);
+    		const is_closed = $(IS_CLOSED_ID);
+    		const search_string = $('#search_string');
 	    	const pagination = $('#risk_list_pagination');
+	    	const tbody = $('#tbody');
+	    	const paginationE = $('#risk_list_pagination');
+
+	    	const triggers = {
+	    		search_input: 1,
+	    		filter_input: 2,
+	    		pagintation_btn: 3,
+	    	}
+
 	    	let useFilters = false;
 
 	    	const toggleFilters = ()=>{
@@ -563,17 +578,78 @@
 	    		toggleFilters();
 	    	});
 
+	    	const fetchListData = async (trigger)=>{
+	    		let pg = 1;
+	    		if (trigger == triggers.pagintation_btn){
+	    			pg = CURRENT_PAGE_NUMBER;
+	    		}
+	    		let query_string = {
+	    			risk_type: risk_type.val(),
+					probability: probability.val(),
+					impact: impact.val(),
+					is_closed: is_closed.val(),
+					page: pg,
+					search_string: search_string.val(),
+	    		}
 
-	    	(()=>{
+	    		query_string = `${API_URLS.risk_list}?${new URLSearchParams(query_string).toString()}`;
+
+			    const res = await fetch(query_string, {
+			        headers: {
+			            'X-Requested-With': 'XMLHttpRequest',
+			            'Accept': 'application/json',
+			        },
+			        credentials: 'same-origin'  // Important for including cookies with the request
+			    });
+
+			    if (res.ok) {
+			        const data = await res.json();
+			        tbody.html(data.risk_html);
+			        paginationE.html(data.pagination_html)
+			        handlePaginationButtons();
+			    } else {
+			        console.log('Failed to load data');
+			    }
+	    	}
+
+	    	filterTools.find('select').on('change', ()=>{
+	    		fetchListData(triggers.filter_input)
+	    	});
+	    	search_string.on('input', (e)=>{
+	    		e.preventDefault();
+	    		fetchListData(triggers.search_input);
+	    	});
+	    	search_string.on('keypress', (e)=>{
+	    		if(e.key == 'Enter'){
+	    			// prevent submiting the form on enter pressed
+	    			e.preventDefault();
+	    		}
+	    	});
+
+	    	const handlePaginationButtons = ()=>{
 	    		// handle pagination stuff
 	    		pagination.find('.page-link').each((index, inpt)=>{
-	    			inp = $(inpt);
-	    			inp.on('click', (e)=>{
-	    				e.preventDefault();
-	    			});
+	    			const inp = $(inpt);
+	    			const page_number = inp.data('pageNumber');
+	    			if(page_number){
+	    				inp.on('click', (e)=>{
+	    					e.preventDefault();
+	    					if(page_number != CURRENT_PAGE_NUMBER){
+	    						CURRENT_PAGE_NUMBER = page_number;
+	    						fetchListData(triggers.pagintation_btn);
+	    					}
+	    				});
+	    			}else{
+	    				inp.on('click', (e)=>{
+	    					// toatster -> nothing
+	    				})
+	    			}
 	    		})
-	    	})()
+	    	}
+	    	handlePaginationButtons();
 	    }
+
+
 
 		$(document).ready(()=>{
 			runConfirmClick();

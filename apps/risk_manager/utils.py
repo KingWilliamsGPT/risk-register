@@ -1,6 +1,8 @@
 from django.apps import apps
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.template.loader import render_to_string
+
 
 def get_app_permissions(app_name):
     """
@@ -36,3 +38,17 @@ def get_app_perms(*app_names):
     for app_name in app_names:
         permissions.extend([f'{app_name}:{perm}' for perm, _ in get_app_permissions(app_name)])
     return permissions
+
+
+def render_template(template_name, context):
+    """
+    Renders a template with the provided context and returns it as a string.
+
+    Args:
+        template_name (str): The path to the template to render.
+        context (dict): The context dictionary to pass to the template.
+
+    Returns:
+        str: The rendered template as a string.
+    """
+    return render_to_string(template_name, context)

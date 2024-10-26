@@ -50,3 +50,6 @@ class SuperUserMixin(UserPassesTestMixin):
         else:
             # The user is logged in but doesn't have the required permissions
             return redirect('risk_register:page_403')
+
+    def is_fetched_request(self, request):
+        return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
