@@ -34,4 +34,8 @@
                 </td>
             {% endif %}
         </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center">No risks available.</td>
+        </tr>
     {% endfor %}
