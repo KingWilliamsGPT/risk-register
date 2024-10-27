@@ -101,13 +101,15 @@
                  const s = ['Closed', 'Opened']
 
                 nice_check.addEventListener('click', ()=> {
-                    other_check.checked = nice_check.checked;
-                    stat.html(s[Number(other_check.checked)]);
+                    other_check.checked = !nice_check.checked;
+                    stat.html(s[Number(!other_check.checked)]);
                 });
                 other_check.addEventListener('click', ()=>{
-                    nice_check.checked = other_check.checked;
-                    stat.html(s[Number(other_check.checked)]);
+                    nice_check.checked = !other_check.checked;
+                    stat.html(s[Number(nice_check.checked)]);
                 });
+                nice_check.checked = !other_check.checked;
+                stat.html(s[Number(nice_check.checked)]);
             }
         });
 </script>
@@ -189,6 +191,7 @@
                 <div class="card-header">
                     <h4 class="card-title">Add Risk</h4>
 
+                    {% if user.is_super_admin %}
                     <div class="pull-right d-flex" style="align-items: center;">
                         <div style="margin-top:-10px; padding-right: 10px !important" id="stat">Closed</div>
                         <label class="switch pull-right">
@@ -196,6 +199,8 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+                    {% endif %}
+
 
                 </div>
                 <div class="card-body">
@@ -203,6 +208,17 @@
                         <form method='post' action=''>
                             {% csrf_token %}
                             <p>{% for message in messages %}{{message}}{% endfor %}</p>
+                                                        {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        {% for field, errors in form.errors.items %}
+                                            {% for error in errors %}
+                                                <li><strong>{{ field|capfirst }}:</strong> {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
                             <div class="form-group">
                                 <label for="risk_description">Risk Description <span class="text-danger">*</span></label>
                                 {{ form.risk_description }}

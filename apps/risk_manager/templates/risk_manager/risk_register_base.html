@@ -167,15 +167,19 @@
                                     <img src="{{ user.get_profile_url }}" width="20" alt="" class="border-danger" style="{% if user.is_super_admin %}border: 3px solid red;{% endif %}" {% if user.is_super_admin %}title="You are a super admin"{% endif %}>
 									<div class="header-info">
 										<span class="text-black"><strong>{{ user.get_display_name }}</strong></span>
-										<p class="fs-12 mb-0">{{ user.department }}</p>
+										<p class="fs-12 mb-0">{{ user.department|default:"(No department)" }}</p>
 									</div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <a href="app-profile.html" class="dropdown-item ai-icon">
+                                    <a href="#" class="dropdown-item ai-icon">
                                         <svg id="icon-user1" xmlns="http://www.w3.org/2000/svg" class="text-primary" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         <span class="ms-2">Profile </span>
                                     </a>
-                                    <a href="email-inbox.html" class="dropdown-item ai-icon">
+                                    <a href="{% url 'risk_register:staff_update' user.id %}" class="dropdown-item ai-icon">
+                                        <i class="fa fa-gear"></i>
+                                        <span class="ms-2">Edit </span>
+                                    </a>
+                                    <a href="#" class="dropdown-item ai-icon">
                                         <svg id="icon-inbox" xmlns="http://www.w3.org/2000/svg" class="text-success" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                         <span class="ms-2">Inbox </span>
                                     </a>
@@ -223,8 +227,8 @@
 						<span class="nav-text">Staff</span>
 					</a>
 					<ul aria-expanded="false">
-						<li><a href="index.html">Add Staff</a></li>
-						<li><a href="index-3.html">Staffs</a></li>
+						<li><a href="{% url 'risk_register:staff_create' %}">Add Staff</a></li>
+						<li><a href="{% url 'risk_register:staff_list' %}">Staffs</a></li>
 					</ul>
 				</li>
 				<li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
@@ -239,12 +243,8 @@
 
                 </ul>
 				<div class="add-menu-sidebar">
-					<!-- <img src="images/calendar.png" alt="" class="me-3">
-					<a href="workoutplan.html" class="font-w500 mb-0">Create Workout Plan Now</a> -->
 				</div>
 				<div class="copyright">
-					<!-- <p><strong>Gymove Fitness Admin Dashboard</strong> © 2023 All Rights Reserved</p>
-					<p>Made with <span class="heart"></span> by DexignZone</p> -->
 				</div>
 			</div>
         </div>
@@ -285,7 +285,7 @@
         ***********************************-->
         <footer class="footer">
             <div class="copyright">
-                  <p>Copyright © &amp; RedStar PLC (FedX)</p>
+                  <p><a href="https://redstarplc.com/" target="_blank">Copyright © &amp; RedStar PLC (FedX)</a></p>
             </div>
         </footer>
         <!--**********************************
@@ -654,7 +654,10 @@
 		$(document).ready(()=>{
 			runConfirmClick();
 			doCalanderStuff();
-			handleRiskListView();
+			try{
+				handleRiskListView();
+			}catch(e){
+			}
 		});
 	</script>
 {% endblock more_scripts %}

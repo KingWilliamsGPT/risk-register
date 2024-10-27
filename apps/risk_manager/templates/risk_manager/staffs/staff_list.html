@@ -1,0 +1,119 @@
+{% extends "../risk_register_base.html" %}
+{% load static %}
+{% load humanize %}
+{% load custom_tags %}
+
+{% block nav_title %}Staff{% endblock nav_title %}
+
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title"> <img src="{% static "icons/search-3d.png" %}" style="height:30px;"> Staff</h4>
+                </div>
+                <div class="card-body">
+                    <div class="filter-tools mb-4 show">
+                        <div class="basic-form">
+                            
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped verticle-middle table-responsive-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <th scope="col">First Name</th>
+                                    <th scope="col">Last Name</th>
+                                    <th scope="col">Email</th>
+                                    {% if user.is_super_admin %}<th scope="col" class="text-center">Action</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="tbody">
+                                {% for staff in staffs %}
+                                    <tr>
+                                        <td class="text-center"><img src="{{ staff.get_profile_url }}" style="{% if staff.is_super_admin %}border: 3px solid;{% endif %}"  class="rounded-lg me-2 border-danger" width="24" alt=""></td>
+                                        <td>{{ staff.first_name }} {% if staff == user %}(You){% endif %}</td>
+                                        <td>{{ staff.last_name }}</td>
+                                        <td><a href="mailto:{{staff.email}}">{{ staff.email }}</a></td>
+                                        {% if user.is_super_admin %}
+                                            <td class="text-center ">
+                                                <div class="d-flex" style="justify-content: space-around;">
+                                                    <span><a
+                                                            href="javascript:void(0)" data-bs-toggle="tooltip"
+                                                            data-placement="top" title="Delete"><i
+                                                                class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:staff_delete' staff.id %}" data-confirm-text=""></i></a></span>
+                                                    <a href="{% url 'risk_register:staff_update' staff.id %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No risks available.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div  class="w-100" style="overflow: auto!important;">
+                        <nav aria-label="Page navigation" id="">
+                            <ul class="pagination justify-content-end mb-0">
+                                <!-- Previous Page -->
+                                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                    <a class="page-link" data-page-number="{% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% endif %}" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1">Previous</a>
+                                </li>
+
+                                <!-- Page numbers -->
+                                {% for page_num in paginator.page_range %}
+                                    {% if page_num == page_obj.number %}
+                                        <!-- Current Page -->
+                                        <li class="page-item active">
+                                            <a class="page-link" data-page-number="{{ page_num }}" href="#">{{ page_num }} <span class="sr-only">(current)</span></a>
+                                        </li>
+                                    {% else %}
+                                        <!-- Other Pages -->
+                                        <li class="page-item">
+                                            <a class="page-link" data-page-number="{{ page_num }}" href="?page={{ page_num }}">{{ page_num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Next Page -->
+                                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                    <a class="page-link" data-page-number="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+
+{% block more_scripts %}
+    {{ block.super }}
+    <!-- more scripts -->
+
+
+{% endblock %}
+
+{% block more_head %}
+    {{ block.super }}
+    <link href="vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <!-- Add Flatpickr CSS with material blue theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    <style>
+        .flatpickr-calendar.open {
+            z-index: 1060 !important; /* Ensure calendar appears above Bootstrap modal */
+        }
+    </style>
+{% endblock more_head %}

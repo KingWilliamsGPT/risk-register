@@ -133,7 +133,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-DEFAULT_PROFILE_AVATARS = [f'[avatars/(1).jpg]' for i in range(1, 11)]
+DEFAULT_PROFILE_AVATARS = [f'[avatars/({i}).jpg]' for i in range(1, 11)]
 
 
 # Default primary key field type
@@ -146,15 +146,14 @@ LOGIN_REDIRECT_URL = "homepage"
 LOGOUT_REDIRECT_URL = "login"
 
 # Setting up Email Backend
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = 'email_logs'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = 'email_logs' # must be a directory
 
 import os.path
 
 if not os.path.exists(EMAIL_FILE_PATH):
-    with open(EMAIL_FILE_PATH, 'w') as f:
-        f.close()
+    os.mkdir(EMAIL_FILE_PATH)
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -170,4 +169,8 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'djangoexample@gmail.com'
 
 APP_NAME = "Risk register app"
-DEFAULT_PAGINATION_COUNT = 20
+DEFAULT_PAGINATION_COUNT = 40
+
+# random password generation
+MAX_RANDOM_PASSWORD_LENGTH = 10
+RANDOM_PASSWORD_ALLOWED_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'

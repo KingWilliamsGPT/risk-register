@@ -29,5 +29,11 @@ urlpatterns = [
     path('departments/<int:pk>/', views.DepartmentDetailView.as_view(), name='dept_read'),
     path('departments/<int:pk>/update/', views.DepartmentUpdateView.as_view(), name='dept_update'),
 
+    path('staffs/', views.StaffListView.as_view(), name='staff_list'),
+    path('staffs/add/', views.StaffAddView.as_view(), name='staff_create'),
+    path('staffs/<int:pk>/delete/', views.StaffDeleteView.as_view(), name='staff_delete'),
+    path('staffs/<int:pk>/update/', views.StaffUpdateView.as_view(), name='staff_update'),
+    path('staffs/<int:pk>/update/profile_pic/', views.UpdateStaffProfilePicView.as_view(), name='staff_update_pic'),
+
     path('risk/pages/403/', views.Page403.as_view(), name='page_403'),
 ]

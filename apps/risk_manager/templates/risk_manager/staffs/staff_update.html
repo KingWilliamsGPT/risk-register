@@ -1,0 +1,170 @@
+{% extends "../risk_register_base.html" %}
+{% load static %}
+
+{% block nav_title %}Staff{% endblock nav_title %}
+
+{% block more_scripts %}
+{{block.super}}
+
+<script type="text/javascript">
+        $(document).ready(()=>{
+            const new_pics = $('.new-pic');
+            const new_profile_pic = $('#new_profile_pic');
+            const new_profile_pic_form = $('#new_profile_pic_form');
+
+            new_pics.on('click', (e)=>{
+                const elem = $(e.target)
+                const pic_code = elem.data('picCode');
+                new_profile_pic.val(pic_code);
+                new_profile_pic_form.submit();
+            });
+        });
+</script>
+
+{% endblock %}
+
+{% block main_content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 col-12">
+            <div class="card risk-form">
+                <div class="card-header">
+                    <h4 class="card-title">Update Staff {% if staff == user %}(You){% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="basic-form">
+                        {% if staff == user %}
+                            <div class="form-group" style="">
+                                <div style="width: 35%;margin-left: auto;margin-right: auto;position: relative; " id="profile-pic" class="profile-stuff">
+                                    <img src="{{ staff.get_profile_url }}" class="img-fluid" alt="{{ staff.get_display_name }} Profile Picture" style="border-radius: 50%;">
+                                    <div class="edit-stuff d-flex">
+                                        <button class="edit-btn btn btn-default m-auto" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">Edit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <form method='post' action=''>
+                            {% csrf_token %}
+                            <p>{% for message in messages %}{{message}}{% endfor %}</p>
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        {% for field, errors in form.errors.items %}
+                                            {% for error in errors %}
+                                                <li><strong>{{ field|capfirst }}:</strong> {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="">First Name <span class="text-danger">*</span></label>
+                                {{ form.first_name }}
+                            </div>
+                             <div class="form-group">
+                                <label for="">Last Name <span class="text-danger">*</span></label>
+                                {{ form.last_name }}
+                            </div>                           
+                            <div class="form-group">
+                                <label for="">Username <span class="text-danger">*</span></label>
+                                {{ form.username }}
+                            </div>
+                            <div class="form-group">
+                                <label for="">Email <span class="text-danger">*</span></label>
+                                {{ form.email }}
+                            </div>
+                            {% if user.is_super_admin %}
+                            <div class="form-group">
+                                <label for="">Department <span class="text-danger">*</span></label>
+                                {{ form.department }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.is_super_admin }} <label for="">Super Admin <span class="text-danger">*</span></label>
+                            </div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+
+                        <form id="new_profile_pic_form" method="post" action="{% url 'risk_register:staff_update_pic' staff.id %}" class="d-none">
+                            {% csrf_token %}
+                            {{ profile_pic_form }}
+                        </form>
+
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Choose Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-grid">
+                        <div class="container my-4">
+                          <div class="row photo-grid g-3">
+                            {% for profile_pic, pic_code in form.get_profile_pics %}
+                                <div class="col-3" style="cursor: pointer;">
+                                  <img src="{{ profile_pic }}" alt="Photo 1" class="img-fluid new-pic" data-bs-dismiss="modal" data-pic-code="{{pic_code}}">
+                                </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .edit-stuff{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        background: rgba(0,0,0, .6);
+        top: 0;
+        left: 0;
+        border-radius: 50%;
+        z-index: -1;
+    }
+
+    .edit-stuff .edit-btn{
+        border-color: #eee;
+    }
+
+    .profile-stuff:hover .edit-stuff{
+        z-index: auto;
+    }
+
+        .photo-grid img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    .photo-grid .col {
+      padding: 5px;
+    }
+    .new-pic{
+        border-radius: 5px;
+        transition: linear .2s transform;
+    }
+    .new-pic:hover{
+        transform: scale(1.05, 1.05);
+    }
+</style>
+{% endblock main_content %}
+
+

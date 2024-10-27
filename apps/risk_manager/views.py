@@ -13,14 +13,15 @@ from django.db.models import F
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.db.models.functions import ExtractDay, ExtractMonth, ExtractYear
+from django.core.mail import send_mail
 
-from apps.authentication.models import Department, User
+from apps.authentication.models import Department, User, User as Staff
 from apps.authentication.forms import AddDepartmentForm
 
 from .models import Risk
-from .forms import AddRiskForm, RiskFilterForm
+from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm
 from .mixins import SuperUserMixin
-from .utils import render_template
+from .utils import render_template, make_random_password
 
 DEFAULT_PAGINATION_COUNT = settings.DEFAULT_PAGINATION_COUNT
 DEFAULT_CURRENCY_SYMBOL = '₦'
@@ -79,6 +80,11 @@ class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         if "form" not in kwargs:
             kwargs["form"] = self.get_form()
         return super().get_context_data(**kwargs)
+
+    def get_form(self, *args, **kwargs):
+        if not self.request.user.is_super_admin:
+            self.form_class = AddRiskMinimalForm
+        return super().get_form(*args, **kwargs)
     
 
 from django.core.paginator import Paginator
@@ -93,7 +99,7 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
     template_name_part = 'risk_manager/risk_list_part.html'
     template_name_part2 = 'risk_manager/risk_list_pagination_part.html'
     context_object_name = 'risks'
-    paginate_by = 1 #settings.DEFAULT_PAGINATION_COUNT
+    paginate_by = settings.DEFAULT_PAGINATION_COUNT
 
     def get_queryset(self):
         queryset = Risk.objects.all()
@@ -388,6 +394,7 @@ class DepartmentAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):
     form_class = AddDepartmentForm
     model = Department
     success_url = reverse_lazy('risk_register:dept_list')
+    super_admin_only = True
 
     def form_valid(self, form):
         reponse = super().form_valid(form)
@@ -425,5 +432,158 @@ class DepartmentUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
     template_name = "risk_manager/departments/update.html"
 
 
+
+class StaffAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):
+    template_name = "risk_manager/staffs/staff_add.html"
+    form_class = AddStaffForm
+    model = Staff
+    success_url = reverse_lazy('risk_register:staff_list')
+    super_admin_only = True
+
+    def form_valid(self, form):
+        # Save the staff object
+        response = super().form_valid(form)
+        self.object = new_staff = form.save(commit=False)
+        
+        # Generate a random password
+        password = make_random_password(settings.MAX_RANDOM_PASSWORD_LENGTH, settings.RANDOM_PASSWORD_ALLOWED_CHARS)
+        new_staff.set_password(password)
+        new_staff.is_super_admin = False
+        new_staff.save()
+
+        context = {
+            'password': password,
+            'user': new_staff,
+            'new_staff': new_staff,
+        }
+        
+        your_password_html = render_template('risk_manager/email/account_created.html', context)
+        new_staff_html = render_template('risk_manager/email/new_staff.html', context)
+        others_in_my_department = new_staff.department.staffs.exclude(id=new_staff.id).values_list('email', flat=True)
+
+        send_mail(
+            'Your Staff Account Password',
+            your_password_html,
+            settings.DEFAULT_FROM_EMAIL,
+            [new_staff.email],
+            fail_silently=False,
+        )
+
+        send_mail(
+            'New Staff',
+            new_staff_html,
+            settings.DEFAULT_FROM_EMAIL,
+            others_in_my_department,
+            fail_silently=False,
+        )
+        
+        return response
+
+    def form_invalid(self, form):
+        """If the form
+         is invalid, render the invalid form."""
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        if "form" not in kwargs:
+            kwargs["form"] = self.get_form()
+        return super().get_context_data(**kwargs)
+
+
+class StaffDeleteView(SuperUserMixin, LoginRequiredMixin, g.View):
+    model = Staff
+    success_url = reverse_lazy('risk_register:staff_list')  # Replace with your desired redirect URL
+    super_admin_only = True
+    
+    def get(self, request, pk):
+        # the issue here is if users accidently navigate using get request data might be loss, but I don't want or need
+        user = self.model.objects.all().filter(id=pk).first()
+        if user == request.user:
+            return HttpResponse('Error! You tried deleting yourself.')
+        else:
+            user.delete()
+        return redirect(self.success_url)
+
+
+class StaffListView(SuperUserMixin, LoginRequiredMixin, g.ListView):
+    template_name = "risk_manager/staffs/staff_list.html"
+    model = Staff
+    context_object_name = 'staffs'
+    paginate_by = settings.DEFAULT_PAGINATION_COUNT
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # context['form'] = RiskFilterForm(self.request.GET)
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        current_user = self.request.user
+
+        if queryset.filter(id=current_user.id).exists():
+            # Reorder the queryset with the current user first
+            queryset = queryset.exclude(id=current_user.id)
+            queryset = Staff.objects.filter(id=current_user.id).union(queryset)
+        
+        return queryset.order_by('-date_joined')
+
+
+class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
+    model = Staff
+    template_name = "risk_manager/staffs/staff_update.html"
+    form_class = AddStaffForm
+    context_object_name = 'staff'
+
+    def get_success_url(self):
+        # Redirect to the detail view of the updated risk after successful form submission
+        return reverse_lazy('risk_register:staff_list')
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        context = super().get_context_data(**kwargs)        
+        context['form'] = self.form_class(instance=self.object)
+        context['profile_pic_form'] = UpdateStaffProfilePicForm(instance=self.object)
+        return context
+
+    def dispatch(self, request, pk):
+        if not request.user.is_super_admin and pk != request.user.id:
+            return redirect('risk_register:page_403')
+        return super().dispatch(request, pk)
+
+    def get_form(self, *args, **kwargs):
+        if not self.request.user.is_super_admin:
+            self.form_class = UpdateStaffMinimalForm
+        else:
+            self.form_class = AddStaffForm
+        return super().get_form(*args, **kwargs)
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+class UpdateStaffProfilePicView(SuperUserMixin, LoginRequiredMixin, g.View):
+    model = Staff
+    form_class = UpdateStaffProfilePicForm
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *a, **kw):
+        form = self.form_class(request.POST)
+
+        if form.is_valid():
+            profile_pic = form.cleaned_data.get('profile_pic')
+            if profile_pic:
+                me = request.user
+                me.profile_pic = profile_pic
+                me.save()
+
+        return redirect('risk_register:staff_update', pk=me.id)
+
+
+
 class Page403(LoginRequiredMixin, g.TemplateView):
     template_name = 'risk_manager/403.html'
+
+

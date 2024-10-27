@@ -7,6 +7,9 @@ from django.templatetags.static import static
 
 
 class User(AbstractUser):
+    # class Meta:
+    #     ordering = ['-date_joined']
+        
     department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, related_name='staffs')
     is_super_admin =  models.BooleanField(blank=True, default=False)            # simply implies some common priviledges like elevated actions on risks
     # can_create_other_admins = models.BooleanField(blank=True, default=False)
