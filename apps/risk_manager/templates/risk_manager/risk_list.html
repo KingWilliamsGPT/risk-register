@@ -13,7 +13,8 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title"> <img src="{% static "icons/search-3d.png" %}" style="height:30px;"> Risk</h4>
-                    <div class="d-flex">
+                    <div class="d-flex align-items-stretch">
+                        <div class="mr-2"><a class="btn  btn-sm " href="{% url 'risk_register:risk_excel' %}"><img src="{% static 'icons/excel1.png' %}" style="width: 29px;"></a></div>
                         <form>
                             <div class="input-group search-area me-3">
                               <span class="input-group-text" id="header-search">
@@ -25,7 +26,7 @@
                             </div>
                         </form>
                         <div style="width: 47.2333px; height: 43px;">
-                            <button id="filter-btn" class="btn btn-primary btn-sm" title="filter"><i class="flaticon-381-controls-3"></i></button>
+                            <button id="filter-btn" class="btn btn-primary btn-sm" title="filter" style="height: 100%;"><i class="flaticon-381-controls-3"></i></button>
                         </div>
                     </div>
                 </div>

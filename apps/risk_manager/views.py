@@ -1,4 +1,6 @@
 from collections.abc import Sequence
+import openpyxl
+from openpyxl.utils import get_column_letter
 from django.db import models
 from django.db.models import Count, Sum
 from django.views import generic as g
@@ -66,6 +68,42 @@ class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
         """Insert the form into the context dict."""
         kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS)
         return super().get_context_data(**kwargs)
+
+
+class DownloadRiskExcel(SuperUserMixin, LoginRequiredMixin, g.View):
+    # TODO:
+    #  use the filter form to generate the excel file
+
+    def get(self, request):
+        # Create an in-memory workbook and sheet
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Risks"
+
+        # Set the headers
+        headers = ["Risk Description", "Risk Type", "Probability", "Impact", "Rating", "Risk Owner", "Status", "Date Raised"]
+        for col_num, header in enumerate(headers, 1):
+            col_letter = get_column_letter(col_num)
+            sheet[f"{col_letter}1"] = header
+
+        # Populate the rows with risk data
+        risks = Risk.objects.all()  # Fetch your risk data (apply any filtering if necessary)
+        for row_num, risk in enumerate(risks, 2):  # Start from row 2
+            sheet[f"A{row_num}"] = risk.risk_description
+            sheet[f"B{row_num}"] = risk.risk_type
+            sheet[f"C{row_num}"] = risk.get_prob_label()
+            sheet[f"D{row_num}"] = risk.get_impact_label()
+            sheet[f"E{row_num}"] = f"{risk.rating_percent()}%"
+            sheet[f"F{row_num}"] = risk.risk_owner.name
+            sheet[f"G{row_num}"] = "Closed" if risk.is_closed else "Opened"
+            sheet[f"H{row_num}"] = risk.date_opened.strftime('%Y-%m-%d')
+
+        # Prepare response for download
+        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        response["Content-Disposition"] = 'attachment; filename="risk_list.xlsx"'
+        workbook.save(response)
+        return response
+
 
 
 class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):

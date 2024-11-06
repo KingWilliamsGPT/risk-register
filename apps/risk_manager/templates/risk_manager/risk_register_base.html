@@ -228,6 +228,7 @@
 					</a>
 					<ul aria-expanded="false">
 						<li><a href="{% url 'risk_register:staff_create' %}">Add Staff</a></li>
+						<li><a href="{% url 'risk_register:staff_update' user.id %}">Me</a></li>
 						<li><a href="{% url 'risk_register:staff_list' %}">Staffs</a></li>
 					</ul>
 				</li>
@@ -237,6 +238,7 @@
 					</a>
 					<ul aria-expanded="false">
 						<li><a href="{% url 'risk_register:dept_create' %}">Add Department</a></li>
+						<li><a href="{% url 'risk_register:dept_read' user.department.id %}">My Department</a></li>
 						<li><a href="{% url 'risk_register:dept_list' %}">Departments</a></li>
 					</ul>
 				</li>

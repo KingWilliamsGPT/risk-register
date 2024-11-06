@@ -12,6 +12,7 @@ urlpatterns = [
     path('', views.Dashboard.as_view(), name='home'),
 
     path('risk/', views.RiskListView.as_view(), name='risk_list'),
+    path('risk/excel/', views.DownloadRiskExcel.as_view(), name='risk_excel'),
     path('risk/add/', views.AddRisk.as_view(), name='risk_create'),
     path('risk/<int:pk>/', views.AddRisk.as_view(), name='risk_read'),
     path('risk/<int:pk>/update/', views.RiskDetailView.as_view(), name='risk_update'),
