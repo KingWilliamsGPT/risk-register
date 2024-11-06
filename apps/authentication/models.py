@@ -31,12 +31,28 @@ class Department(models.Model):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=10)
     description = models.CharField(max_length=1500, blank=True, default='')
+    _opened_risks = None
+    _closed_risks = None
 
     def __str__(self):
         return self.name
 
     def get_code(self):
         return self.code.strip()
+
+    def _init_risks(self):
+        if self._closed_risks is None or self._opened_risks is None:
+            risks = self.risks.all()
+            self._closed_risks = risks.filter(is_closed=True)
+            self._opened_risks = risks.filter(is_closed=False)
+
+    def get_opened_risks(self):
+        self._init_risks()
+        return self._opened_risks.count()
+
+    def get_closed_risks(self):
+        self._init_risks()
+        return self._closed_risks.count()
 
 
 class GlobalSettings(models.Model):

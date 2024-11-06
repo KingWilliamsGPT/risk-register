@@ -30,6 +30,14 @@ MAX_SEVERE_RISKS = 10
 from django.core.exceptions import PermissionDenied
 
 
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.generic import ListView
+from .models import Risk
+from .forms import RiskFilterForm
+
+
+
 def get_most_severe_risks(num):
     return Risk.objects.annotate(
             severity=F('probability') * F('impact')
@@ -49,6 +57,8 @@ def _from_iso(isodate):
     isodate = isodate[:-1] if isodate.upper().endswith('Z') else isodate
     return timezone.datetime.fromisoformat(isodate)
 
+
+
 class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/home.html"
 
@@ -56,6 +66,7 @@ class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
         """Insert the form into the context dict."""
         kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS)
         return super().get_context_data(**kwargs)
+
 
 class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
     template_name = "risk_manager/add_risk.html"
@@ -67,8 +78,40 @@ class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         reponse = super().form_valid(form)
         self.object = form.save()
         response = HttpResponseRedirect(self.get_success_url())
+
+        self.mail_others()
         
         return response
+
+    def mail_others(self):
+        # mail others in the department that the risk was added to
+        risk = self.object
+        me = self.request.user
+        others = risk.risk_owner.staffs.exclude(id=me.id).values_list('email', flat=True)
+        context = {
+            'staff': self.request.user,
+            'request': self.request,
+            'risk': risk,
+        }
+
+        new_risk_me = render_template('risk_manager/email/new_risk_to_one.html', context)
+        new_risk_others = render_template('risk_manager/email/new_risk_to_others.html', context)
+
+        send_mail(
+            'You successfully added a new risk',
+            new_risk_me,
+            settings.DEFAULT_FROM_EMAIL,
+            [me.email],
+            fail_silently=False
+        )
+
+        send_mail(
+            'A new risk was added to oyour department',
+            new_risk_others,
+            settings.DEFAULT_FROM_EMAIL,
+            others,
+            fail_silently=False,
+        )
 
     def form_invalid(self, form):
         """If the form
@@ -85,13 +128,7 @@ class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         if not self.request.user.is_super_admin:
             self.form_class = AddRiskMinimalForm
         return super().get_form(*args, **kwargs)
-    
 
-from django.core.paginator import Paginator
-from django.http import JsonResponse
-from django.views.generic import ListView
-from .models import Risk
-from .forms import RiskFilterForm
 
 class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
     model = Risk
@@ -172,7 +209,6 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['form'] = RiskFilterForm(self.request.GET)
         return context
-
 
 
 class RiskDeleteView(SuperUserMixin, LoginRequiredMixin, g.View):
@@ -276,6 +312,7 @@ class RiskSeveritySummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
             })
 
         return JsonResponse(response_data, safe=False)
+
 
 class RiskRatingSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
@@ -412,25 +449,52 @@ class DepartmentAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         return super().get_context_data(**kwargs)
 
 
-class DepartmentDetailView(SuperUserMixin, LoginRequiredMixin, g.DetailView):
+
+class DepartmentUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
     model = Department
+    form_class = AddDepartmentForm
     template_name = "risk_manager/departments/details.html"
     context_object_name = 'department'
 
+    def get_success_url(self):
+        # Redirect to the detail view of the updated risk after successful form submission
+        return reverse_lazy('risk_register:dept_update', kwargs={'pk': self.object.pk})
+
     def get_context_data(self, **kwargs):
         """Insert the form into the context dict."""
-        # if "form" not in kwargs:
-        #     kwargs["form"] = self.get_form()
+        context = super().get_context_data(**kwargs)        
+        context['form'] = self.form_class(instance=self.object)
+        return context
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        if "form" not in kwargs:
+            kwargs["form"] = self.get_form()
         department = self.get_object()
         staffs = department.staffs.order_by('is_super_admin')
         kwargs['staffs'] = staffs
         return super().get_context_data(**kwargs)
 
+    def form_valid(self, form):
+        # Save the staff object
+        redirect_response = super().form_valid(form)
+        if self.request.user.is_super_admin:
+            self.object = form.save()
+        else:
+            return redirect('risk_register:page_403')
+        return redirect_response
 
-class DepartmentUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
+
+
+class DepartmentDeleteView(SuperUserMixin, LoginRequiredMixin, g.View):
     model = Department
-    template_name = "risk_manager/departments/update.html"
-
+    success_url = reverse_lazy('risk_register:dept_list')  # Replace with your desired redirect URL
+    super_admin_only = True
+    
+    def get(self, request, pk):
+        # the issue here is if users accidently navigate using get request data might be loss, but I don't want or need
+        j = self.model.objects.all().filter(id=pk).delete()
+        return redirect(self.success_url)
 
 
 class StaffAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):

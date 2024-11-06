@@ -4,6 +4,15 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
 
+from django.core.mail.backends.base import BaseEmailBackend
+from pysendpulse.pysendpulse import PySendPulse
+from mailgun import Mailgun
+
+
+
+EMAIL_THRID_PARTY = 'sendpulse'
+
+
 
 def get_app_permissions(app_name):
     """
@@ -60,3 +69,88 @@ def make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEF
     # Note that default value of allowed_chars does not have "I" or letters
     # that look like it -- just to avoid confusion.
     return ''.join([choice(allowed_chars) for i in range(length)])
+
+
+
+class EmailApi(PySendPulse):
+
+    def __init__(self, *args, **kwargs):
+        from django.conf import settings
+        user_id, secret = settings.SEND_PULSE_ID, settings.SEND_PULSE_SECRET
+        super().__init__(user_id, secret, *args, **kwargs)
+
+
+    def smtp_send_mail(self, text, subject, from_, html=None, to=(), cc=None, bcc=None, attachments=None, attachments_binary=None):
+        return super().smtp_send_mail({
+            'text': text,
+            'subject': subject,
+            'from': from_,
+            'html': html or '',
+            'to': to,
+            'cc': cc,
+            'bcc': bcc,
+            'attachments': attachments or {},
+            'attachments_binary': attachments_binary or {},
+        })
+
+
+class Mailgun(Mailgun):
+    pass
+
+
+def send_mail(subject, text, from_=None, html=None, to=(), cc=None, bcc=None, **kw):
+    from django.conf import settings
+    from_email = from_ or settings.DEFAULT_FROM_EMAIL
+
+    if EMAIL_THRID_PARTY == 'sendpulse':
+        api_client = EmailApi()
+        api_client.smtp_send_mail(text, subject, from_email, html, to, cc, bcc)
+        return api_client
+
+
+def send_mail_mailgun(domain, api_key, subject, to, html, display_name="Display Name"):
+    import requests
+    return requests.post(
+    f"https://api.mailgun.net/v3/{domain}/messages",
+    auth=("api", api_key),
+    data={"from": f"{display_name} <mailgun@{domain}>",
+    "to": to,
+    "subject": subject,
+    "html": html})
+
+
+
+class EmailBackend(BaseEmailBackend):
+    def send_messages(self, messages):
+        '''Note a message has the following attributes 
+        ['attach',
+         'attach_file',
+         'attachments',
+         'bcc',
+         'body',
+         'cc',
+         'connection',
+         'content_subtype',
+         'encoding',
+         'extra_headers',
+         'from_email',
+         'get_connection',
+         'message',
+         'mixed_subtype',
+         'recipients',
+         'reply_to',
+         'send',
+         'subject',
+         'to']
+
+        '''
+        not_sent=0
+        total_msgs=0
+        for m in messages:
+            total_msgs += 1
+            try:
+                _send_mail(m.subject, m.message, m.from_email, None, m.to, m.cc, m.bcc)
+            except Exception:
+                not_sent += 1
+        sent_count = total_msgs-not_sent
+        return sent_count

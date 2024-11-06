@@ -18,10 +18,10 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     # path for register view
-    path('register/', views.register, name='register'),
+    # path('register/', views.register, name='register'),
 
     #path for activate view
-    path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+    # path('activate/<uidb64>/<token>/', views.activate, name='activate'),
 
     #path to reset password
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='authentication/password_reset.html',

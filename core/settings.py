@@ -150,6 +150,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = 'email_logs' # must be a directory
 
+# SEND PULSE EMAIL SETTINGS
+SEND_PULSE_ID=os.getenv("SEND_PULSE_ID")
+SEND_PULSE_SECRET=os.getenv("SEND_PULSE_SECRET")
+
+# MAIL GUN EMAIL SETTINGS
+MAILGUN_API_KEY=os.getenv('MAIL_GUN_API_KEY')
+MAIL_GUN_PUBLIC_KEY=os.getenv('MAIL_GUN_PUBLIC_KEY')
+MAILGUN_DOMAIN=os.getenv('MAILGUN_DOMAIN')
+
+
 import os.path
 
 if not os.path.exists(EMAIL_FILE_PATH):
@@ -174,3 +184,6 @@ DEFAULT_PAGINATION_COUNT = 40
 # random password generation
 MAX_RANDOM_PASSWORD_LENGTH = 10
 RANDOM_PASSWORD_ALLOWED_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+
+
