@@ -25,7 +25,56 @@
 				jQuery('.chartlist-chart').css('min-width',chartBlockWidth - 31);
 			}
 		}
-		var riskDeptDistribution = async function(apiURL){
+		// var riskDeptDistribution = async function(apiURL){
+		// 	/* Sample data shape
+		// 		{"series":[1,1,1,5,2,2,2,1],"labels":["Environ... (1)","Financi... (1)","Market ... (1)","Operati... (5)","Politic... (2)","Reputat... (2)","Supplie... (2)","Technol... (1)"],"tooltips":["Environmental Risk","Financial Risk","Market Risk","Operational Risk","Political Risk","Reputational Risk","Supplier/Vendor Risk","Technological Risk"]}
+		// 	*/
+
+		//     const chartID = '#risk-dept-distribution';
+		//     const chart = document.querySelector(chartID);
+
+		//     const res = await fetch(apiURL, {
+		//         headers: {
+		//             'X-Requested-With': 'XMLHttpRequest',
+		//             'Accept': 'application/json',
+		//         },
+		//         credentials: 'same-origin'  // Important for including cookies with the request
+		//     });
+
+		//     if (res.ok) {
+		//         const data = await res.json();
+		//         a = data;
+		//         const e = $(chart).parent();
+		//         e.removeClass('bg-loader');
+
+		//         if (!data.series.length) {
+		//             e.addClass('chart-area-no-data');
+		//             e.attr('title', 'No data was returned, try saving some data.');
+		//         }
+
+		//         const chartOpt = {
+		//             labelInterpolationFnc: function(value, index) {
+		//                 return data.labels[index];  // Short labels for display
+		//             },
+		//             plugins: [
+		//                 // Chartist.plugins.tooltip({
+		//                 //     tooltipFnc: function(meta, value, index) {
+		//                 //         return data.tooltips[index];  // Full risk type name on hover
+		//                 //     }
+		//                 // })
+	    //                 Chartist.plugins.tooltip()  // Add tooltips (requires the Chartist tooltip plugin)
+
+		//             ]
+		//         };
+
+		//         new Chartist.Pie(chartID, data, chartOpt);
+		//     } else {
+		//         console.log('Failed to load risk summary pie chart data');
+		//         chart.innerHTML = '<p>Could not load data.</p>';
+		//     }
+		// };
+
+		var riskDeptDistribution = async function(apiURL) {
 		    const chartID = '#risk-dept-distribution';
 		    const chart = document.querySelector(chartID);
 
@@ -45,29 +94,42 @@
 		        if (!data.series.length) {
 		            e.addClass('chart-area-no-data');
 		            e.attr('title', 'No data was returned, try saving some data.');
+		            return;
 		        }
 
 		        const chartOpt = {
-		            labelInterpolationFnc: function(value, index) {
-		                return data.labels[index];  // Short labels for display
+		            axisX: {
+		                labelInterpolationFnc: function(value, index) {
+		                    return data.labels[index];  // Use short labels on the X-axis
+		                }
 		            },
 		            plugins: [
-		                // Chartist.plugins.tooltip({
-		                //     tooltipFnc: function(meta, value, index) {
-		                //         return data.tooltips[index];  // Full risk type name on hover
-		                //     }
-		                // })
-	                    Chartist.plugins.tooltip()  // Add tooltips (requires the Chartist tooltip plugin)
+		                Chartist.plugins.tooltip()  // Add tooltips (requires the Chartist tooltip plugin)
+		            ],
+		            seriesBarDistance: 10,  // Space between bars
 
-		            ]
 		        };
+		        
 
-		        new Chartist.Pie(chartID, data, chartOpt);
+		        new Chartist.Bar(chartID, { 
+		            labels: data.labels,  // X-axis labels for each bar
+		            series: [data.series]  // Series data for bar heights
+		        }, chartOpt)
+		        .on('draw', function(data) {
+		        	// possible types are grid, label and bar
+					if(data.type === 'bar') {
+						data.element.attr({
+							style: 'stroke-width: 20px'
+						});
+					}
+				});
+
 		    } else {
-		        console.log('Failed to load risk summary pie chart data');
+		        console.log('Failed to load risk summary bar chart data');
 		        chart.innerHTML = '<p>Could not load data.</p>';
 		    }
 		};
+
 
 		var riskSuperSummaryDistribution = async function(apiURL){
 		    const risk_opened = $('#risk_opened');
@@ -212,9 +274,65 @@
 			});
 
 
-			const view = select_progress_view.find('select').val()
+			const view = select_progress_view.find('select').val();
 			updateProgressChart(view);
 		}
+
+		var riskByDepartmentDistribution = async function(apiURL) {
+		     chartCanvas = document.getElementById('risk-dept-distribution2');
+		    const ctx = chartCanvas.getContext('2d');
+
+		    const res = await fetch(apiURL, {
+		        headers: {
+		            'X-Requested-With': 'XMLHttpRequest',
+		            'Accept': 'application/json',
+		        },
+		        credentials: 'same-origin'
+		    });
+
+		    if (res.ok) {
+		        const data = await res.json();
+
+		        const riskDeptChart = new Chart(ctx, {
+		            type: 'bar',
+		            data: {
+		                labels: data.labels,  // Department names
+		                datasets: [
+		                    {
+		                        label: 'Opened Risks',
+		                        data: data.open_series,
+		                        backgroundColor: '#EE3232B8',
+		                        borderColor: '#EE3232E8',
+		                        borderWidth: 1
+		                    },
+		                    {
+		                        label: 'Closed Risks',
+		                        data: data.closed_series,
+		                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+		                        borderColor: 'rgba(153, 102, 255, 1)',
+		                        borderWidth: 1
+		                    }
+		                ]
+		            },
+		            options: {
+		                responsive: true,
+		                maintainAspectRatio: false,
+		                scales: {
+		                    x: {
+		                        beginAtZero: true
+		                    },
+		                    y: {
+		                        beginAtZero: true
+		                    }
+		                }
+		            }
+		        });
+		    } else {
+		        console.log('Failed to load risk summary bar chart data');
+		        chartCanvas.innerHTML = '<p>Could not load data.</p>';
+		    }
+		};
+
 
 
 		return {
@@ -226,6 +344,7 @@
 				riskDeptDistribution(API_URLS.risk_type_summary);
 				riskSuperSummaryDistribution(API_URLS.risk_super_summary);
 				dailyMontlyRiskProgress(API_URLS.risk_progress);
+				riskByDepartmentDistribution(API_URLS.risk_dept_summary);
 			},
 			
 			resize:function(){

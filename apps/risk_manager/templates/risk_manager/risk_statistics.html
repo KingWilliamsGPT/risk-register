@@ -1,23 +1,123 @@
 {% extends "./risk_register_base.html" %}
 {% load static %}
+{% load custom_tags %}
 
 {% block nav_title %}Risk{% endblock nav_title %}
 
 
 {% block main_content %}
 <div class="container-fluid">
-    <div class="row">
-        risk statistics
+
+
+    <div class='row'>
+        <!-- to preload the bg images -->
+        <div class="bg-loader d-none"></div>
+        <div class="chart-area-no-data d-none"></div>
+
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Risks by Category</h4>
+                </div>
+                <div class="card-body bg-loader no-bg" style="cursor: pointer; max-height: 21rem;">
+                    {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
+                </div>
+            </div>
+        </div>
+
+<!--         <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header ">
+                    <h4 class="card-title">Top Risks</h4>
+                </div>
+                <div class="card-body no-bg p-0">
+                    <div id="DZ_W_Todo3" class="widget-media  my-4 px-4 dz-scroll height370">
+                        <ul class="timeline">
+                            {% for risk in severe_risks %}
+                                <li>
+                                    <div class="timeline-panel">
+                                        <div class="media-body">
+                                            <h5 class="mb-1"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}">{{ risk.risk_owner }}</a> <small class="text-muted">{{ risk.date_opened }}</small></h5>
+                                            <p title="{{ risk.risk_description }}">{{ risk.risk_description|trim:"40" }}</p>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" style="width: {{ risk.rating_percent }}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn btn-primary light sharp" data-bs-toggle="dropdown">
+                                                <svg width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end">
+                                                <a class="dropdown-item" href="{% url 'risk_register:risk_update' risk.id %}">View</a>
+                                                <a class="dropdown-item" href="#">Pin</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header ">
+                    <h4 class="card-title">Risk by Department</h4>
+                </div>
+                <div class="card-body" style="height: 326px; overflow-x: auto; width: 100%;">
+                    <!-- <div id="daily-montly-risk-progress" class="ct-chart ct-golden-section chartlist-chart"  style="overflow-x: scroll; overflow-y: hidden;"></div> -->
+                    <canvas id="risk-dept-distribution2" width="1200"></canvas> 
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Risk Progress</h4>
+                    <div class="pull-right">
+                        <select class="open-risk-progress">
+                          <option value="daily" selected>Daily View</option>
+                          <option value="monthly">Montly View</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body" style="height: 326px; overflow-x: auto; width: 100%;">
+                    <!-- <div id="daily-montly-risk-progress" class="ct-chart ct-golden-section chartlist-chart"  style="overflow-x: scroll; overflow-y: hidden;"></div> -->
+                    <canvas id="daily-montly-risk-progress" width="1200"></canvas> 
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock main_content %}
 
 
 {% block more_scripts %}
-    {{ block.super }}
-    <!-- more scripts -->
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    <script src="{% static 'vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap-select/js/bootstrap-select.min.js' %}"></script>
+    <!-- Chart Chartist plugin files -->
+    <script src="{% static 'vendor/chartist/js/chartist.min.js' %}"></script>
+    <script src="{% static 'vendor/chartist-plugin-tooltips/js/chartist-plugin-tooltip.min.js' %}"></script>
+    <script src="{% static 'js/plugins-init/chartist-init.js' %}"></script>
+    <script src="{% static 'js/custom.min.js' %}"></script>
+    <script src="{% static 'js/deznav-init.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    
 {% endblock %}
 
 {% block more_head %}
-    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'vendor/chartist/css/chartist.min.css' %}">
+    {{block.super}}
 {% endblock more_head %}

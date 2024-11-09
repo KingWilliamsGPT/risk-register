@@ -52,18 +52,18 @@
         <div class="bg-loader d-none"></div>
         <div class="chart-area-no-data d-none"></div>
 
-        <div class="col-sm-12 col-md-6">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Risks by Category</h4>
                 </div>
-                <div class="card-body bg-loader no-bg" style="cursor: pointer;">
+                <div class="card-body bg-loader no-bg" style="cursor: pointer; max-height: 21rem;">
                     {% include "./__risk_dept_pie_chart.html" with id='risk-dept-distribution' %}
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-12 col-md-6">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header ">
                     <h4 class="card-title">Top Risks</h4>

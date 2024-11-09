@@ -219,7 +219,7 @@
 						<li><a href="{% url "risk_register:risk_create" %}">Add Risk</a></li>
 						<li><a href="{% url "risk_register:risk_list" %}">Risks</a></li>
 						<li><a href="{% url "risk_register:risk_statistics" %}">Risk Statistics</a></li>
-						<li><a href="{% url "risk_register:risk_pinned" %}">Pinned</a></li>
+						<!-- <li><a href="{% url "risk_register:risk_pinned" %}">Pinned</a></li> -->
 					</ul>
 				</li>
 				<li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
@@ -400,6 +400,7 @@
 			risk_super_summary: "{% url 'risk_register:risk_super_summary' %}",
 			risk_progress: "{% url 'risk_register:risk_progress' %}",
 			risk_list: "{% url 'risk_register:risk_list' %}",
+			risk_dept_summary: "{% url 'risk_register:risk_dept_summary' %}",
 		}
     </script>
 	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">

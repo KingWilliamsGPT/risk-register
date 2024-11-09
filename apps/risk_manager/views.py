@@ -2,7 +2,7 @@ from collections.abc import Sequence
 import openpyxl
 from openpyxl.utils import get_column_letter
 from django.db import models
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.views import generic as g
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
@@ -285,6 +285,37 @@ class RiskPinned(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/risk_pinned.html"
 
 
+class RiskByDeptSummary(SuperUserMixin, LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        # Query to get counts of open and closed risks by department
+        risk_distribution = (
+            Risk.objects.values('risk_owner__name')
+                .annotate(
+                    open_count=Count('id', filter=Q(is_closed=False)),
+                    closed_count=Count('id', filter=Q(is_closed=True))
+                )
+        )
+
+        # return HttpResponse(risk_distribution)
+        
+        res = {
+            'labels': [],
+            'open_series': [],
+            'closed_series': [],
+        }
+
+        for risk in risk_distribution:
+            risk_owner = risk['risk_owner__name']
+            open_count = risk['open_count']
+            closed_count = risk['closed_count']
+            
+            res['labels'].append(risk_owner)
+            res['open_series'].append(open_count)
+            res['closed_series'].append(closed_count)
+
+        return JsonResponse(res, safe=False)
+
+
 class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         risk_distribution = Risk.objects.values('risk_type').annotate(count=Count('id'))
@@ -301,7 +332,8 @@ class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
             short_risk_type = (risk_type[:MAX_LEN_RISK_TYPE] + '...') if len(risk_type) > MAX_LEN_RISK_TYPE else risk_type  # Truncate after MAX_LEN_RISK_TYPE chars
             
             res['series'].append(risk_count)
-            res['labels'].append(f'{short_risk_type} ({risk_count})')
+            # res['labels'].append(f'{short_risk_type} ({risk_count})')
+            res['labels'].append(f'{risk_type} ({risk_count})')
             res['tooltips'].append(risk_type)  # Full risk type name for tooltip
 
         return JsonResponse(res, safe=False)
@@ -399,9 +431,11 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
 
             # Get opened risks and closed risks grouped by day
             opened_risks = Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))\
-                .annotate(day=ExtractDay('date_opened')).values('day').annotate(count=Count('id')).order_by('day')
-            closed_risks = Risk.objects.filter(is_closed=True, date_closed__range=(start_date, end_date))\
-                .annotate(day=ExtractDay('date_closed')).values('day').annotate(count=Count('id')).order_by('day')
+                .annotate(day=ExtractDay('date_opened')) \
+                .values('day').annotate(count=Count('id')).order_by('day')
+            closed_risks = Risk.objects.filter(is_closed=True, date_opened__range=(start_date, end_date))\
+                .annotate(day=ExtractDay('date_opened')) \
+                .values('day').annotate(count=Count('id')).order_by('day')
 
             # Populate opened_risks_data and closed_risks_data
             for entry in opened_risks:
@@ -426,8 +460,8 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
             opened_risks = Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))\
                 .annotate(month=ExtractMonth('date_opened'), year=ExtractYear('date_opened'))\
                 .values('year', 'month').annotate(count=Count('id')).order_by('year', 'month')
-            closed_risks = Risk.objects.filter(is_closed=True, date_closed__range=(start_date, end_date))\
-                .annotate(month=ExtractMonth('date_closed'), year=ExtractYear('date_closed'))\
+            closed_risks = Risk.objects.filter(is_closed=True, date_opened__range=(start_date, end_date))\
+                .annotate(month=ExtractMonth('date_opened'), year=ExtractYear('date_opened'))\
                 .values('year', 'month').annotate(count=Count('id')).order_by('year', 'month')
 
             # Populate opened_risks_data and closed_risks_data
