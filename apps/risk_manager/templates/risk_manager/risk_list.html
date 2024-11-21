@@ -107,7 +107,7 @@
                                             {% else %}
                                             <span class="badge badge-primary light badge-sm">Opened</span>
                                             {% endif %}</td>
-                                        <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}">{{ risk.date_opened|naturaltime }}</a></td>
+                                        <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}" title="{{risk.date_opened|naturaltime}}" >{{ risk.date_opened }}</a></td>
                                         {% if user.is_super_admin %}
                                             <td class="text-center ">
                                                 <div class="d-flex" style="justify-content: space-around;">
