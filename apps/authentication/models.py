@@ -1,9 +1,23 @@
+import uuid
 from random import choice as random_choice
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.templatetags.static import static
+
+
+def generate_recovery_code():
+    return str(uuid.uuid4())[:8]
+
+
+def reset_or_generate_code(user, how_many=settings.MAX_RECOVERY_CODES):
+    if how_many <= 0:
+        raise ValueError("The number of recovery codes must be greater than zero.")
+    
+    user.recovery_codes.all().delete()
+    recovery_codes = [UserRecoveryCode(user=user) for _ in range(how_many)]
+    UserRecoveryCode.objects.bulk_create(recovery_codes)
 
 
 class User(AbstractUser):
@@ -22,6 +36,14 @@ class User(AbstractUser):
 
     def get_display_name(self):
         return (f'{self.first_name.strip()} {self.last_name.strip()}'.strip()) or self.get_username()
+
+
+class UserRecoveryCode(models.Model):
+    code = models.CharField(default=generate_recovery_code, max_length=10)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recovery_codes')
+
+    def __str__(self):
+        return self.code
 
 
 class Department(models.Model):
@@ -62,3 +84,16 @@ class GlobalSettings(models.Model):
 
     allow_risk_deadlines = models.BooleanField(blank=True, default=True)
     allow_changable_date_reported = models.BooleanField(blank=True, default=False)
+
+
+
+class Activity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
+    action = models.CharField(max_length=20, )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True, null=True)
+    is_read = models.BooleanField(default=False)
+
+
+    def get_unread_activities(self):
+        return self.user.activities.filter(is_read=False)

@@ -11,6 +11,11 @@ urlpatterns = [
     path('', views.Dashboard.as_view(), name='dashboard'),
     path('', views.Dashboard.as_view(), name='home'),
 
+    path('me/password_change/', views.MePasswordChange.as_view(), name='password_change'),
+    path('me/recovery_codes/reset', views.MeRecoveryCodeReset.as_view(), name='recovery_codes_reset'),
+    path('me/recovery_codes/download', views.MeRecoveryCodeDownload.as_view(), name='recovery_codes_download'),
+
+
     path('risk/', views.RiskListView.as_view(), name='risk_list'),
     path('risk/excel/', views.DownloadRiskExcel.as_view(), name='risk_excel'),
     path('risk/add/', views.AddRisk.as_view(), name='risk_create'),

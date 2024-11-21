@@ -26,7 +26,8 @@
                     <div class="basic-form">
                         <form method='post' action=''>
                             {% csrf_token %}
-                            <p class="small mb-2">This staff will recieve an email with a password</p>
+                            <!-- <p class="small mb-2">This staff will recieve an email with a password</p> -->
+                            <p class="small mb-2">The user's password will be their last name in <b>UPPERCASE</b></p>
                             {% if form.errors %}
                                 <div class="alert alert-danger">
                                     <ul class="mb-0">

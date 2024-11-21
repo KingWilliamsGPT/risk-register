@@ -16,14 +16,16 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from django.db.models.functions import ExtractDay, ExtractMonth, ExtractYear
 from django.core.mail import send_mail
+from django.contrib import messages
 
-from apps.authentication.models import Department, User, User as Staff
+from apps.authentication.models import Department, User, User as Staff, UserRecoveryCode, reset_or_generate_code 
 from apps.authentication.forms import AddDepartmentForm
 
 from .models import Risk
-from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm
+from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm, StaffPasswordChangeForm
 from .mixins import SuperUserMixin
 from .utils import render_template, make_random_password
+
 
 DEFAULT_PAGINATION_COUNT = settings.DEFAULT_PAGINATION_COUNT
 DEFAULT_CURRENCY_SYMBOL = '₦'
@@ -68,6 +70,61 @@ class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
         """Insert the form into the context dict."""
         kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS)
         return super().get_context_data(**kwargs)
+
+
+class MePasswordChange(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
+    template_name = "risk_manager/me/password_change.html"
+    form_class = StaffPasswordChangeForm
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        kwargs['form'] = self.get_form()
+        kwargs['recovery_codes'] = self.request.user.recovery_codes.all()
+        return super().get_context_data(**kwargs)
+
+    def get_form(self):
+        if self.request.method == "POST":
+            return self.form_class(self.request.POST)
+        return self.form_class()
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            current_password = form.cleaned_data["current_password"]
+            new_password = form.cleaned_data["new_password"]
+
+            if not request.user.check_password(current_password):
+                form.add_error("current_password", "The current password is incorrect.")
+                return self.render_to_response(self.get_context_data(form=form))
+
+            # Save the new password
+            form.save(request.user)
+            messages.success(request, "Your password has been successfully changed.")
+            return redirect("risk_register:password_change")
+
+        # If the form is invalid, re-render the page with errors
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class MeRecoveryCodeReset(SuperUserMixin, LoginRequiredMixin, g.View):
+    def post(self, request, *args, **kwargs):
+        me = self.request.user
+        reset_or_generate_code(me)
+        return redirect('risk_register:password_change')
+
+
+
+class MeRecoveryCodeDownload(SuperUserMixin, LoginRequiredMixin, g.View):
+    def get(self, request, *args, **kwargs):
+        recovery_codes = UserRecoveryCode.objects.filter(user=request.user)
+        if not recovery_codes.exists():
+            return HttpResponse("No recovery codes found for download.", status=404)
+
+        recovery_codes_text = "\n".join([code.code for code in recovery_codes])
+        response = HttpResponse(recovery_codes_text, content_type="text/plain")
+        response['Content-Disposition'] = 'attachment; filename="recovery_codes.txt"'
+        
+        return response
 
 
 class DownloadRiskExcel(SuperUserMixin, LoginRequiredMixin, g.View):
@@ -582,36 +639,36 @@ class StaffAddView(SuperUserMixin, LoginRequiredMixin, g.CreateView):
         self.object = new_staff = form.save(commit=False)
         
         # Generate a random password
-        password = make_random_password(settings.MAX_RANDOM_PASSWORD_LENGTH, settings.RANDOM_PASSWORD_ALLOWED_CHARS)
+        # password = make_random_password(settings.MAX_RANDOM_PASSWORD_LENGTH, settings.RANDOM_PASSWORD_ALLOWED_CHARS)
+        password = new_staff.last_name.upper()
         new_staff.set_password(password)
-        new_staff.is_super_admin = False
         new_staff.save()
 
-        context = {
-            'password': password,
-            'user': new_staff,
-            'new_staff': new_staff,
-        }
+        # context = {
+        #     'password': password,
+        #     'user': new_staff,
+        #     'new_staff': new_staff,
+        # }
         
-        your_password_html = render_template('risk_manager/email/account_created.html', context)
-        new_staff_html = render_template('risk_manager/email/new_staff.html', context)
-        others_in_my_department = new_staff.department.staffs.exclude(id=new_staff.id).values_list('email', flat=True)
+        # your_password_html = render_template('risk_manager/email/account_created.html', context)
+        # new_staff_html = render_template('risk_manager/email/new_staff.html', context)
+        # others_in_my_department = new_staff.department.staffs.exclude(id=new_staff.id).values_list('email', flat=True)
 
-        send_mail(
-            'Your Staff Account Password',
-            your_password_html,
-            settings.DEFAULT_FROM_EMAIL,
-            [new_staff.email],
-            fail_silently=False,
-        )
+        # send_mail(
+        #     'Your Staff Account Password',
+        #     your_password_html,
+        #     settings.DEFAULT_FROM_EMAIL,
+        #     [new_staff.email],
+        #     fail_silently=False,
+        # )
 
-        send_mail(
-            'New Staff',
-            new_staff_html,
-            settings.DEFAULT_FROM_EMAIL,
-            others_in_my_department,
-            fail_silently=False,
-        )
+        # send_mail(
+        #     'New Staff',
+        #     new_staff_html,
+        #     settings.DEFAULT_FROM_EMAIL,
+        #     others_in_my_department,
+        #     fail_silently=False,
+        # )
         
         return response
 
@@ -673,6 +730,11 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
 
     def get_success_url(self):
         # Redirect to the detail view of the updated risk after successful form submission
+        me = self.request.user
+        staff = self.get_object()
+        if me == staff:
+            # a staff editing his/herself should be redirected to either the update page or user page if any
+            return reverse_lazy('risk_register:staff_update', kwargs={'pk': me.id})
         return reverse_lazy('risk_register:staff_list')
 
     def get_context_data(self, **kwargs):
@@ -683,6 +745,7 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         return context
 
     def dispatch(self, request, pk):
+        # only super users can edit other staffs
         if not request.user.is_super_admin and pk != request.user.id:
             return redirect('risk_register:page_403')
         return super().dispatch(request, pk)

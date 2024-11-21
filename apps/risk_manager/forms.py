@@ -1,13 +1,62 @@
+import re
+
 from .models import Risk
 from django import forms
 from djmoney.money import Money
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.templatetags.static import static
+from django.contrib.auth.forms import PasswordChangeForm
 
 
 from apps.authentication.models import Department, User
 from apps.authentication.forms import UserCreationForm, UserRegistrationForm
+
+
+
+
+def is_strong_password(password):
+    """
+    Validates the security of a password based on common rules.
+    
+    Args:
+        password (str): The password to validate.
+    
+    Returns:
+        tuple: (bool, list). A boolean indicating if the password is strong,
+               and a list of reasons why it is not.
+    """
+    errors = []
+
+    # Rule 1: Minimum length
+    if len(password) < settings.MIN_PASSWORD_LENGTH:
+        errors.append("Password must be at least 8 characters long.")
+
+    # Rule 2: Contains at least one uppercase letter
+    if not any(char.isupper() for char in password):
+        errors.append("Password must contain at least one uppercase letter.")
+
+    # Rule 3: Contains at least one lowercase letter
+    if not any(char.islower() for char in password):
+        errors.append("Password must contain at least one lowercase letter.")
+
+    # Rule 4: Contains at least one digit
+    if not any(char.isdigit() for char in password):
+        errors.append("Password must contain at least one digit.")
+
+    # Rule 5: Contains at least one special character
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        errors.append("Password must contain at least one special character (!@#$%^&*(), etc.).")
+
+    # Rule 6: Not too common (use a common password dictionary or pattern check)
+    common_passwords = settings.COMMON_PASSWORDS
+    if password.lower() in common_passwords:
+        errors.append("Password is too common and easy to guess.")
+
+    # If there are no errors, the password is strong
+    is_strong = not errors
+    return is_strong, errors
+
 
 
 class AddRiskMinimalForm(forms.ModelForm):
@@ -194,3 +243,41 @@ class UpdateStaffProfilePicForm(forms.ModelForm):
             'id': 'new_profile_pic',
             'hidden': '',
         })
+
+
+class StaffPasswordChangeForm(forms.Form):
+    current_password = forms.CharField(
+        label="Current Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "off"}),
+    )
+    new_password = forms.CharField(
+        label="New Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+    confirm_password = forms.CharField(
+        label="Confirm New Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password != confirm_password:
+            raise forms.ValidationError("The new passwords do not match.")
+
+        password_is_strong, password_errors = is_strong_password(new_password)
+
+        if not password_is_strong:
+            raise forms.ValidationError(f'Password Not Strong Enough 💪:<br> <ul>{"".join([f"<li>{error}</li>" for error in password_errors if error])}</ul>')
+
+        return cleaned_data
+
+    def save(self, user):
+        """
+        Update the user's password after validating the form.
+        """
+        user.set_password(self.cleaned_data["new_password"])
+        user.save()
+        return user

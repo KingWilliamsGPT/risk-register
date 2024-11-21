@@ -25,6 +25,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-i8(-4%4an#y%06n+-zr%e6@d8$^c6ynj=o716fsom9@qk(a$2y'
+MIN_PASSWORD_LENGTH = 5
+MAX_RECOVERY_CODES = 6
+
+COMMON_PASSWORDS = {}
+
+def fetch_common_passwords(where):
+    with open(where, 'r') as fpath:
+        txt = fpath.read()
+    return set(txt.split('\n'))
+
+
+try:
+    COMMON_PASSWORDS = fetch_common_passwords()
+except Exception as ex:
+    pass
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
