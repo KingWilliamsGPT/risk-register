@@ -14,7 +14,7 @@
                 <div class="card-header">
                     <h4 class="card-title"> <img src="{% static "icons/search-3d.png" %}" style="height:30px;"> Risk</h4>
                     <div class="d-flex align-items-stretch">
-                        <div class="mr-2"><a class="btn  btn-sm " href="{% url 'risk_register:risk_excel' %}"><img src="{% static 'icons/excel1.png' %}" style="width: 29px;"></a></div>
+                        <div class="mr-2"><a class="btn  btn-sm " href="javascript:void(0);" id="download-excel"><img src="{% static 'icons/excel1.png' %}" style="width: 29px;"></a></div>
                         <form>
                             <div class="input-group search-area me-3">
                               <span class="input-group-text" id="header-search">
@@ -79,6 +79,8 @@
                                 <tr>
                                     <th scope="col">Risk Description</th>
                                     <th scope="col">Risk Type</th>
+                                    <th scope="col">Risk Response</th>
+                                    <th scope="col">Budget</th>
                                     <th scope="col">Probability</th>
                                     <th scope="col">Impact</th>
                                     <th scope="col">Rating</th>
@@ -93,9 +95,11 @@
                                     <tr>
                                         <td title="{{risk.risk_description}}"><a href="{% url 'risk_register:risk_update' risk.id %}">{{ risk.risk_description|trim:"30" }}</a></td>
                                         <td>{{ risk.risk_type }}</td>
+                                        <td title="{{ risk.risk_response }}">{{ risk.risk_response|trim:"30" }}</td>
+                                        <td>₦{{ risk.risk_budget.amount|default:"0.0" }}</td>
                                         <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_prob_color }}!important;">{{ risk.get_prob_label }}</span></td>
                                         <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_impact_color }}!important;">{{ risk.get_impact_label }}</span></td>
-                                        <td title="{{ risk.rating_info.tag }}">
+                                        <td title="{{ risk.rating_info.tag }} {{ risk.rating_percent }}%">
                                             <div class="progress" style="background: rgba(76, 175, 80, .1)" >
                                                 <div class="progress-bar bg-success" style="width: {{ risk.rating_percent }}%; background-color: {{ risk.rating_info.color }}!important;" role="progressbar"><span class="sr-only">70% Complete</span>
                                                 </div>
@@ -111,11 +115,9 @@
                                         {% if user.is_super_admin %}
                                             <td class="text-center ">
                                                 <div class="d-flex" style="justify-content: space-around;">
-                                                    <span><a
-                                                            href="javascript:void(0)" data-bs-toggle="tooltip"
-                                                            data-placement="top" title="Delete"><i
-                                                                class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}" data-confirm-text=""></i></a></span>
-                                                    <a href="{% url 'risk_register:risk_update' risk.id %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
+                                                    <span><a href="javascript:void(0)" data-bs-toggle="tooltip" data-placement="top" title="Delete">
+                                                            <i class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}" data-confirm-text=""></i></a></span>
+                                                    <a href="{% url 'risk_register:risk_update' risk.id %}" title="Edit" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
                                                 </div>
                                             </td>
                                         {% endif %}

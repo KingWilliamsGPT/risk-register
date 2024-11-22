@@ -42,6 +42,7 @@ urlpatterns = [
     path('staffs/<int:pk>/delete/', views.StaffDeleteView.as_view(), name='staff_delete'),
     path('staffs/<int:pk>/update/', views.StaffUpdateView.as_view(), name='staff_update'),
     path('staffs/<int:pk>/update/profile_pic/', views.UpdateStaffProfilePicView.as_view(), name='staff_update_pic'),
+    path('staffs/<int:pk>/update/profile_image/', views.UpdateUploadedProfilePicView.as_view(), name='staff_update_image'),
 
     path('risk/pages/403/', views.Page403.as_view(), name='page_403'),
 ]

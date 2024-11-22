@@ -17,14 +17,15 @@ from datetime import timedelta, datetime
 from django.db.models.functions import ExtractDay, ExtractMonth, ExtractYear
 from django.core.mail import send_mail
 from django.contrib import messages
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.db.models.functions import TruncDay, TruncMonth
 
 from apps.authentication.models import Department, User, User as Staff, UserRecoveryCode, reset_or_generate_code 
 from apps.authentication.forms import AddDepartmentForm
 
 from .models import Risk
-from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm, StaffPasswordChangeForm
+from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm, UpdateStaffImageForm,  StaffPasswordChangeForm
 from .mixins import SuperUserMixin
 from .utils import render_template, make_random_password
 
@@ -133,6 +134,9 @@ class DownloadRiskExcel(SuperUserMixin, LoginRequiredMixin, g.View):
     # TODO:
     #  use the filter form to generate the excel file
 
+    def get_ordering(self):
+        return ('-id', )
+        
     def get(self, request):
         # Create an in-memory workbook and sheet
         workbook = openpyxl.Workbook()
@@ -140,22 +144,24 @@ class DownloadRiskExcel(SuperUserMixin, LoginRequiredMixin, g.View):
         sheet.title = "Risks"
 
         # Set the headers
-        headers = ["Risk Description", "Risk Type", "Probability", "Impact", "Rating", "Risk Owner", "Status", "Date Raised"]
+        headers = ["Risk Description", "Risk Type", "Risk Response", "Budget", "Probability", "Impact", "Rating", "Risk Owner", "Status", "Date Raised"]
         for col_num, header in enumerate(headers, 1):
             col_letter = get_column_letter(col_num)
             sheet[f"{col_letter}1"] = header
 
         # Populate the rows with risk data
-        risks = Risk.objects.all()  # Fetch your risk data (apply any filtering if necessary)
+        risks = RiskListView.do_risk_filter(self)  # Fetch your risk data (apply any filtering if necessary)
         for row_num, risk in enumerate(risks, 2):  # Start from row 2
             sheet[f"A{row_num}"] = risk.risk_description
             sheet[f"B{row_num}"] = risk.risk_type
-            sheet[f"C{row_num}"] = risk.get_prob_label()
-            sheet[f"D{row_num}"] = risk.get_impact_label()
-            sheet[f"E{row_num}"] = f"{risk.rating_percent()}%"
-            sheet[f"F{row_num}"] = risk.risk_owner.name
-            sheet[f"G{row_num}"] = "Closed" if risk.is_closed else "Opened"
-            sheet[f"H{row_num}"] = risk.date_opened.strftime('%Y-%m-%d')
+            sheet[f"C{row_num}"] = risk.risk_response
+            sheet[f"D{row_num}"] = f"₦{risk.risk_budget.amount if risk.risk_budget else 0}"
+            sheet[f"E{row_num}"] = risk.get_prob_label()
+            sheet[f"F{row_num}"] = risk.get_impact_label()
+            sheet[f"G{row_num}"] = f"{risk.rating_percent()}%"
+            sheet[f"H{row_num}"] = risk.risk_owner.name
+            sheet[f"I{row_num}"] = "Closed" if risk.is_closed else "Opened"
+            sheet[f"J{row_num}"] = risk.date_opened.strftime('%Y-%m-%d')
 
         # Prepare response for download
         response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -236,6 +242,11 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
     paginate_by = settings.DEFAULT_PAGINATION_COUNT
 
     def get_queryset(self):
+        return self.do_risk_filter(self)
+
+    @staticmethod
+    def do_risk_filter(self):
+        # I know why not a mixin class, too lazy :)
         queryset = Risk.objects.all()
         self.filter_form = form = RiskFilterForm(self.request.GET)
 
@@ -847,6 +858,7 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         context = super().get_context_data(**kwargs)        
         context['form'] = self.form_class(instance=self.object)
         context['profile_pic_form'] = UpdateStaffProfilePicForm(instance=self.object)
+        context['profile_image_form'] = UpdateStaffImageForm(instance=self.object)
         return context
 
     def dispatch(self, request, pk):
@@ -863,8 +875,7 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         return super().get_form(*args, **kwargs)
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
 class UpdateStaffProfilePicView(SuperUserMixin, LoginRequiredMixin, g.View):
     model = Staff
     form_class = UpdateStaffProfilePicForm
@@ -881,9 +892,32 @@ class UpdateStaffProfilePicView(SuperUserMixin, LoginRequiredMixin, g.View):
             if profile_pic:
                 me = request.user
                 me.profile_pic = profile_pic
+                me.uploaded_profile_pic = None
                 me.save()
 
         return redirect('risk_register:staff_update', pk=me.id)
+
+
+
+class UpdateUploadedProfilePicView(SuperUserMixin, LoginRequiredMixin, g.View):
+    model = User
+    form_class = UpdateStaffImageForm
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *a, **kw):
+        form = self.form_class(request.POST, request.FILES)  # Include request.FILES for file uploads
+
+        if form.is_valid():
+            uploaded_profile_pic = form.cleaned_data.get('uploaded_profile_pic')
+            if uploaded_profile_pic:
+                me = request.user
+                me.uploaded_profile_pic = uploaded_profile_pic
+                me.save()
+
+        return redirect('risk_register:staff_update', pk=request.user.id)
 
 
 

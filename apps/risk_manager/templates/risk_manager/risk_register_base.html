@@ -3,6 +3,14 @@
 
 
 {% block contents %}
+    <style type="text/css">
+        #risk-dept-distribution .ct-label{
+            color: #464a53;
+        }
+        [data-theme-version="dark"] #risk-dept-distribution .ct-label{
+            color: #fff;
+        }
+    </style>
     <!--*******************
         Preloader start
     ********************-->
@@ -301,7 +309,52 @@
     <!--**********************************
         Main wrapper endhttps://us05web.zoom.us/j/84289077239?pwd=6sx2FRFo0YjC6UoOIuMaP4iIhfNWpI.1
     ***********************************-->
+	<script type="text/javascript">
 
+		// this is just to make the sidebar toggle be persistent on page reload
+		function onClassChange(element, callback) {
+		  const observer = new MutationObserver((mutationsList) => {
+		    for (const mutation of mutationsList) {
+		      if (mutation.attributeName === "class") {
+		        callback(element, element.className); // Pass the element and its new class
+		      }
+		    }
+		  });
+
+		  // Configure the observer to watch for attribute changes
+		  observer.observe(element, { attributes: true });
+
+		  // Return the observer in case you want to disconnect it later
+		  return observer;
+		}
+
+		function saveMenuState(element, key) {
+		  const state = element.className; // Get the current class names
+		  localStorage.setItem(key, state); // Save to localStorage
+		}
+
+
+		function retrieveAndApplyMenuState(element, key, defaultState) {
+		  const savedState = localStorage.getItem(key); // Get the saved state
+		  if (savedState) {
+		    element.className = savedState; // Apply the saved state
+		  } else {
+		    element.className = defaultState; // Apply the default state
+		  }
+		}
+			
+		document.addEventListener('DOMContentLoaded', ()=>{
+			const $menu_element = document.querySelector('#main-wrapper');
+			const menu_storage_key = 'menu_element_state';
+			const className = localStorage.getItem(menu_storage_key);
+			if(className){
+				$menu_element.className = className;
+			}
+			onClassChange($menu_element, (elem, className)=>{
+				saveMenuState(elem, menu_storage_key);
+			});
+		});
+	</script>
 {% endblock contents %}
 
 
@@ -389,7 +442,7 @@
 			height: 2rem;
 			width: 5rem;
 			font-size: 8px;
-/*			border: thin solid red;*/
+		/*			border: thin solid red;*/
 		}
 
 		.filter-tools.show{
@@ -405,6 +458,7 @@
 			risk_progress: "{% url 'risk_register:risk_progress' %}",
 			risk_list: "{% url 'risk_register:risk_list' %}",
 			risk_dept_summary: "{% url 'risk_register:risk_dept_summary' %}",
+			risk_excel_download: "{% url 'risk_register:risk_excel' %}",
 		}
     </script>
 	<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
@@ -478,7 +532,19 @@
 
 	<script type="text/javascript">
 		// implement confirm click for most likely confirm deletions
-		
+		const tools = {
+			redirectToUrl: function (url) {
+			  const link = document.createElement("a"); // Create a new anchor element
+			  link.href = url; // Set the href attribute to the provided URL
+			  link.target = "_self"; // Open in the same tab (default behavior)
+			  link.style.display = "none"; // Hide the link (optional)
+			  document.body.appendChild(link); // Add the link to the DOM
+			  link.click(); // Programmatically click the link
+			  document.body.removeChild(link); // Remove the link from the DOM (clean up)
+			}
+		}
+
+
 		function runConfirmClick(){
 			btns = $('.confirm-click');
 			btns.on('click', (e)=>{
@@ -561,6 +627,7 @@
 	    	const pagination = $('#risk_list_pagination');
 	    	const tbody = $('#tbody');
 	    	const paginationE = $('#risk_list_pagination');
+	    	const downloadBtn = $('#download-excel');
 
 	    	const triggers = {
 	    		search_input: 1,
@@ -585,7 +652,7 @@
 	    		toggleFilters();
 	    	});
 
-	    	const fetchListData = async (trigger)=>{
+	    	const getQueryUrl = (api_url, trigger)=>{
 	    		let pg = 1;
 	    		if (trigger == triggers.pagintation_btn){
 	    			pg = CURRENT_PAGE_NUMBER;
@@ -599,7 +666,11 @@
 					search_string: search_string.val(),
 	    		}
 
-	    		query_string = `${API_URLS.risk_list}?${new URLSearchParams(query_string).toString()}`;
+	    		return `${api_url}?${new URLSearchParams(query_string).toString()}`;
+	    	}
+
+	    	const fetchListData = async (trigger)=>{
+	    		const query_string = getQueryUrl(API_URLS.risk_list, trigger);
 
 			    const res = await fetch(query_string, {
 			        headers: {
@@ -614,9 +685,16 @@
 			        tbody.html(data.risk_html);
 			        paginationE.html(data.pagination_html)
 			        handlePaginationButtons();
+			        doCalanderStuff();
 			    } else {
 			        console.log('Failed to load data');
 			    }
+	    	}
+
+	    	const downloadExcel = ()=>{
+	    		const download_url = getQueryUrl(API_URLS.risk_excel_download);
+	    		// console.log(download_url);
+	    		tools.redirectToUrl(download_url);
 	    	}
 
 	    	filterTools.find('select').on('change', ()=>{
@@ -631,6 +709,11 @@
 	    			// prevent submiting the form on enter pressed
 	    			e.preventDefault();
 	    		}
+	    	});
+
+	    	// download excel
+	    	downloadBtn.on('click', ()=>{
+	    		downloadExcel();
 	    	});
 
 	    	const handlePaginationButtons = ()=>{
@@ -667,4 +750,5 @@
 			}
 		});
 	</script>
+
 {% endblock more_scripts %}

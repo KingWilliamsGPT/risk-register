@@ -87,7 +87,7 @@
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-end">
                                                 <a class="dropdown-item" href="{% url 'risk_register:risk_update' risk.id %}">View</a>
-                                                <a class="dropdown-item" href="#">Pin</a>
+                                                <!-- <a class="dropdown-item" href="#">Pin</a> -->
                                             </div>
                                         </div>
                                     </div>
@@ -107,7 +107,8 @@
                     <h4 class="card-title">Risk Progress</h4>
                     <div class="pull-right">
                         <select class="open-risk-progress">
-                          <option value="daily" selected>Daily View</option>
+                          <option value="" selected>Select</option>
+                          <option value="daily">Daily View</option>
                           <option value="monthly">Montly View</option>
                         </select>
                     </div>

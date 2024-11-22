@@ -3,39 +3,39 @@
 {% load custom_tags %}
 
 
-    {% for risk in risks %}
-        <tr>
-            <td title="{{risk.risk_description}}"><a href="{% url 'risk_register:risk_update' risk.id %}">{{ risk.risk_description|trim:"30" }}</a></td>
-            <td>{{ risk.risk_type }}</td>
-            <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_prob_color }}!important;">{{ risk.get_prob_label }}</span></td>
-            <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_impact_color }}!important;">{{ risk.get_impact_label }}</span></td>
-            <td title="{{ risk.rating_info.tag }}">
-                <div class="progress" style="background: rgba(76, 175, 80, .1)" >
-                    <div class="progress-bar bg-success" style="width: {{ risk.rating_percent }}%; background-color: {{ risk.rating_info.color }}!important;" role="progressbar"><span class="sr-only">70% Complete</span>
-                    </div>
-                </div>
-            </td>
-            <td class="text-center p-0"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}" class="w-100 h-100 m-0 my-0" style="display: block !important; ">{{ risk.risk_owner }}</a></td>
-            <td>{% if risk.is_closed %}
-                <span class="badge badge-light light badge-sm">Closed</span>
-                {% else %}
-                <span class="badge badge-primary light badge-sm">Opened</span>
-                {% endif %}</td>
-            <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}">{{ risk.date_opened|naturaltime }}</a></td>
-            {% if user.is_super_admin %}
-                <td class="text-center ">
-                    <div class="d-flex" style="justify-content: space-around;">
-                        <span><a
-                                href="javascript:void(0)" data-bs-toggle="tooltip"
-                                data-placement="top" title="Delete"><i
-                                    class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}" data-confirm-text=""></i></a></span>
-                        <a href="{% url 'risk_register:risk_update' risk.id %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
-                    </div>
-                </td>
-            {% endif %}
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="8" class="text-center">No risks available.</td>
-        </tr>
-    {% endfor %}
+                                {% for risk in risks %}
+                                    <tr>
+                                        <td title="{{risk.risk_description}}"><a href="{% url 'risk_register:risk_update' risk.id %}">{{ risk.risk_description|trim:"30" }}</a></td>
+                                        <td>{{ risk.risk_type }}</td>
+                                        <td title="{{ risk.risk_response }}">{{ risk.risk_response|trim:"30" }}</td>
+                                        <td>₦{{ risk.risk_budget.amount|default:"0.0" }}</td>
+                                        <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_prob_color }}!important;">{{ risk.get_prob_label }}</span></td>
+                                        <td><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_impact_color }}!important;">{{ risk.get_impact_label }}</span></td>
+                                        <td title="{{ risk.rating_info.tag }} {{ risk.rating_percent }}%">
+                                            <div class="progress" style="background: rgba(76, 175, 80, .1)" >
+                                                <div class="progress-bar bg-success" style="width: {{ risk.rating_percent }}%; background-color: {{ risk.rating_info.color }}!important;" role="progressbar"><span class="sr-only">70% Complete</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center p-0" title="{{risk.risk_owner.description}}"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}" class="w-100 h-100 m-0 my-0" style="display: block !important; ">{{ risk.risk_owner }}</a></td>
+                                        <td>{% if risk.is_closed %}
+                                            <span class="badge badge-light light badge-sm">Closed</span>
+                                            {% else %}
+                                            <span class="badge badge-primary light badge-sm">Opened</span>
+                                            {% endif %}</td>
+                                        <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}" title="{{risk.date_opened|naturaltime}}" >{{ risk.date_opened }}</a></td>
+                                        {% if user.is_super_admin %}
+                                            <td class="text-center ">
+                                                <div class="d-flex" style="justify-content: space-around;">
+                                                    <span><a href="javascript:void(0)" data-bs-toggle="tooltip" data-placement="top" title="Delete">
+                                                            <i class="fas fa-times color-danger confirm-click" data-confirm-target-url="{% url 'risk_register:risk_delete' risk.id %}" data-confirm-text=""></i></a></span>
+                                                    <a href="{% url 'risk_register:risk_update' risk.id %}" title="Edit" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fa fa-pencil"></i></a>
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No risks available.</td>
+                                    </tr>
+                                {% endfor %}

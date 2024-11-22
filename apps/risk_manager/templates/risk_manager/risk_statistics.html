@@ -8,14 +8,6 @@
 {% block main_content %}
 <div class="container-fluid">
 
-    <style type="text/css">
-        #risk-dept-distribution .ct-label{
-            color: #464a53;
-        }
-        [data-theme-version="dark"] #risk-dept-distribution .ct-label{
-            color: #fff;
-        }
-    </style>
 
     <div class='row'>
         <!-- to preload the bg images -->
@@ -89,7 +81,8 @@
                     <h4 class="card-title">Risk Progress</h4>
                     <div class="pull-right">
                         <select class="open-risk-progress">
-                          <option value="daily" selected>Daily View</option>
+                          <option value="" selected>Select</option>
+                          <option value="daily">Daily View</option>
                           <option value="monthly">Montly View</option>
                         </select>
                     </div>

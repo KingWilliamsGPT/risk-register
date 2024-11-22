@@ -28,6 +28,26 @@ class UserLoginForm(AuthenticationForm):
         })
 
 
+class UserLoginForm2(forms.Form):
+    username = forms.CharField()
+    password = forms.CharField(
+        widget=forms.PasswordInput()
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Username or Email',
+            'required': 'True',
+            'id': 'username_field',
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Password',
+            'required': 'True'
+        })
+
 # Customizing Registration Form from UserCreationForm
 class UserRegistrationForm(UserCreationForm):
     class Meta:

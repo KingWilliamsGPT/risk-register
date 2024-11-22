@@ -144,6 +144,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+MEDIA_URL = '/media/'  # URL for serving media files
+MEDIA_ROOT = BASE_DIR / 'media'  # Directory to store media files
+MAX_MEDIA_UPLOAD_SIZE = 120
+
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

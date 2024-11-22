@@ -166,7 +166,16 @@ class ProfilePicsMixin:
             (static(pic[1:-1]), pic) for pic in settings.DEFAULT_PROFILE_AVATARS
         ]
 
-class AddStaffForm(ProfilePicsMixin, forms.ModelForm):
+
+class StaffFormMixin:
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower()  # Normalize email to lowercase
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("A user with this email already exists.")
+        return email
+
+
+class AddStaffForm(StaffFormMixin, ProfilePicsMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username', 'email', 'department', 'is_super_admin']
@@ -201,7 +210,8 @@ class AddStaffForm(ProfilePicsMixin, forms.ModelForm):
         })
 
 
-class UpdateStaffMinimalForm(ProfilePicsMixin, forms.ModelForm):
+
+class UpdateStaffMinimalForm(StaffFormMixin, ProfilePicsMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username', 'email']
@@ -244,6 +254,18 @@ class UpdateStaffProfilePicForm(forms.ModelForm):
             'hidden': '',
         })
 
+
+class UpdateStaffImageForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['uploaded_profile_pic']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['uploaded_profile_pic'].widget.attrs.update({
+            'id': 'upload_profile_pic',
+            'hidden': '',
+        })
 
 class StaffPasswordChangeForm(forms.Form):
     current_password = forms.CharField(

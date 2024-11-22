@@ -8,11 +8,12 @@ from .forms import UserLoginForm, ResetPasswordConfirmForm, ResetPasswordForm
 
 urlpatterns = [
     # login view from auth_views with custom login template
-    path('login/', auth_views.LoginView.as_view(template_name='authentication/login.html',
-                                                form_class=UserLoginForm,
-                                                # True means that if user is already logged in, it will redirect to homepage
-                                                redirect_authenticated_user=True), name='login',
-         ),
+    # path('login/', auth_views.LoginView.as_view(template_name='authentication/login.html',
+    #                                             form_class=UserLoginForm,
+    #                                             # True means that if user is already logged in, it will redirect to homepage
+    #                                             redirect_authenticated_user=True), name='login',
+    #      ),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
 
     # logout view from auth_view
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
