@@ -143,6 +143,11 @@ class Risk(models.Model):
         if self.is_opened and self.estimated_closing_date is None and timezone.now() >= self.estimated_closing_date:
             return True
         
-
-
+    @staticmethod
+    def get_risks(request):
+        me = request.user
+        if me.is_super_admin:
+            return Risk.objects.all()
+        else:
+            return Risk.objects.filter(risk_owner=me.department)
 

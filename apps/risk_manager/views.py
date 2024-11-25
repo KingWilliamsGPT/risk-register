@@ -45,10 +45,12 @@ from .forms import RiskFilterForm
 
 
 
-def get_most_severe_risks(num):
-    return Risk.objects.annotate(
+
+def get_most_severe_risks(num, request=None):
+    return Risk.get_risks(request).annotate(
             severity=F('probability') * F('impact')
         ).order_by('-severity')[:num]
+
 
 def _make_aware(date):
     try:
@@ -71,7 +73,7 @@ class Dashboard(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
 
     def get_context_data(self, **kwargs):
         """Insert the form into the context dict."""
-        kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS)
+        kwargs['severe_risks'] = get_most_severe_risks(MAX_SEVERE_RISKS, self.request)
         return super().get_context_data(**kwargs)
 
 
@@ -247,7 +249,7 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
     @staticmethod
     def do_risk_filter(self):
         # I know why not a mixin class, too lazy :)
-        queryset = Risk.objects.all()
+        queryset = Risk.get_risks(self.request)
         self.filter_form = form = RiskFilterForm(self.request.GET)
 
         if form.is_valid():
@@ -387,8 +389,9 @@ class RiskByDeptSummary(SuperUserMixin, LoginRequiredMixin, g.View):
 
 
 class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
+    # RiskByCategory
     def get(self, request, *args, **kwargs):
-        risk_distribution = Risk.objects.values('risk_type').annotate(count=Count('id'))
+        risk_distribution = Risk.get_risks(request).values('risk_type').annotate(count=Count('id'))
         MAX_LEN_RISK_TYPE = 7
         
         res = {
@@ -412,7 +415,7 @@ class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
 class RiskSuperSummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         # Aggregate the data
-        opened_risks = Risk.objects.filter(is_closed=False)
+        opened_risks = Risk.get_risks(request).filter(is_closed=False)
         opened_risks_count = opened_risks.count()
         closed_risks_count = Risk.objects.filter(is_closed=True).count()
         
@@ -435,7 +438,7 @@ class RiskSuperSummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
 class RiskSeveritySummaryView(SuperUserMixin, LoginRequiredMixin, g.View):
     def get(self, request, *args, **kwargs):
         # Get the top 10 most severe risks based on the rating
-        most_severe_risks = get_most_severe_risks(num=10)
+        most_severe_risks = get_most_severe_risks(num=10, request=request)
 
         # Prepare the response data
         response_data = []
@@ -476,6 +479,7 @@ class RiskRatingSummary(SuperUserMixin, LoginRequiredMixin, g.View):
 
 
 # class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
+#     previos version had some issues with one day delay
 #     def get(self, request, *args, **kwargs):
 #         # Retrieve query parameters
 #         view = request.GET.get('view', 'daily')
@@ -589,14 +593,14 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
 
             # Query risks grouped by day
             opened_risks = (
-                Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request).filter(is_closed=False, date_opened__range=(start_date, end_date))
                 .annotate(day=TruncDay('date_opened'))
                 .values('day')
                 .annotate(count=Count('id'))
                 .order_by('day')
             )
             closed_risks = (
-                Risk.objects.filter(is_closed=True, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request).filter(is_closed=True, date_opened__range=(start_date, end_date))
                 .annotate(day=TruncDay('date_opened'))
                 .values('day')
                 .annotate(count=Count('id'))
@@ -624,14 +628,14 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
 
             # Query risks grouped by month and year
             opened_risks = (
-                Risk.objects.filter(is_closed=False, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request).filter(is_closed=False, date_opened__range=(start_date, end_date))
                 .annotate(month=TruncMonth('date_opened'))
                 .values('month')
                 .annotate(count=Count('id'))
                 .order_by('month')
             )
             closed_risks = (
-                Risk.objects.filter(is_closed=True, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request).filter(is_closed=True, date_opened__range=(start_date, end_date))
                 .annotate(month=TruncMonth('date_opened'))
                 .values('month')
                 .annotate(count=Count('id'))

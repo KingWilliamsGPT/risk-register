@@ -11,6 +11,7 @@
     <div class="row">
         <div class="col-12 pb-4">
             <h1>Hi, {{user.get_display_name}}</h1>
+            <p>{% if user.is_super_admin %}Because you are a super admin the following data cuts accross all departments.{% else %}The following data is for <a href="{% url 'risk_register:dept_read' user.department.id %}">your department</a> only.{% endif %}</p>
         </div>
     </div>
 
@@ -66,7 +67,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header ">
-                    <h4 class="card-title">Top Risks</h4>
+                    <h4 class="card-title" title="{{ severe_risks|length }} found" style="cursor: default;">Top 10 Risks</h4>
                 </div>
                 <div class="card-body no-bg p-0">
                     <div id="DZ_W_Todo3" class="widget-media  my-4 px-4 dz-scroll height370">
@@ -75,7 +76,7 @@
                                 <li>
                                     <div class="timeline-panel">
                                         <div class="media-body">
-                                            <h5 class="mb-1"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}">{{ risk.risk_owner }}</a> <small class="text-muted">{{ risk.date_opened }}</small></h5>
+                                            <h5 class="mb-1"><a href="{% url 'risk_register:dept_read' risk.risk_owner.id %}">{{ forloop.counter }}. {{ risk.risk_owner }}</a> <small class="text-muted">{{ risk.date_opened }}</small></h5>
                                             <p title="{{ risk.risk_description }}">{{ risk.risk_description|trim:"40" }}</p>
                                             <div class="progress">
                                                 <div class="progress-bar bg-primary" style="width: {{ risk.rating_percent }}%"></div>
