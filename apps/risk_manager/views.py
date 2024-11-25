@@ -852,15 +852,17 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         # Redirect to the detail view of the updated risk after successful form submission
         me = self.request.user
         staff = self.get_object()
-        if me == staff:
-            # a staff editing his/herself should be redirected to either the update page or user page if any
-            return reverse_lazy('risk_register:staff_update', kwargs={'pk': me.id})
-        return reverse_lazy('risk_register:staff_list')
+        # if me == staff:
+        #     # a staff editing his/herself should be redirected to either the update page or user page if any
+        #     return reverse_lazy('risk_register:staff_update', kwargs={'pk': me.id})
+        # return reverse_lazy('risk_register:staff_list')
+        messages.success(self.request, "User updated successfully.")
+        return reverse_lazy('risk_register:staff_update', kwargs={'pk': staff.id})
 
     def get_context_data(self, **kwargs):
         """Insert the form into the context dict."""
         context = super().get_context_data(**kwargs)        
-        context['form'] = self.form_class(instance=self.object)
+        # context['form'] = self.form_class(instance=self.object)
         context['profile_pic_form'] = UpdateStaffProfilePicForm(instance=self.object)
         context['profile_image_form'] = UpdateStaffImageForm(instance=self.object)
         return context
@@ -872,10 +874,10 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         return super().dispatch(request, pk)
 
     def get_form(self, *args, **kwargs):
-        if not self.request.user.is_super_admin:
-            self.form_class = UpdateStaffMinimalForm
-        else:
+        if self.request.user.is_super_admin:
             self.form_class = AddStaffForm
+        else:
+            self.form_class = UpdateStaffMinimalForm
         return super().get_form(*args, **kwargs)
 
 

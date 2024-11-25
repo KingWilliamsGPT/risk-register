@@ -60,7 +60,11 @@
                         {% endif %}
                         <form method='post' action=''>
                             {% csrf_token %}
-                            <p>{% for message in messages %}{{message}}{% endfor %}</p>
+                            {% for message in messages %}
+                                <div class="alert alert-success">
+                                    {{message}}
+                                </div>
+                            {% endfor %}
                             {% if form.errors %}
                                 <div class="alert alert-danger">
                                     <ul class="mb-0">
@@ -89,13 +93,13 @@
                                 {{ form.email }}
                             </div>
                             {% if user.is_super_admin %}
-                            <div class="form-group">
-                                <label for="">Department <span class="text-danger">*</span></label>
-                                {{ form.department }}
-                            </div>
-                            <div class="form-group">
-                                {{ form.is_super_admin }} <label for="">Super Admin <span class="text-danger">*</span></label>
-                            </div>
+                                <div class="form-group">
+                                    <label for="">Department <span class="text-danger">*</span></label>
+                                    {{ form.department }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form.is_super_admin }} <label for="">Super Admin <span class="text-danger">*</span></label>
+                                </div>
                             {% endif %}
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>

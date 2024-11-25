@@ -87,6 +87,7 @@ class User(AbstractUser):
             super().save(*args, **kwargs)
         except IntegrityError:
             pass
+            
 
 class UserRecoveryCode(models.Model):
     code = models.CharField(default=generate_recovery_code, max_length=10)

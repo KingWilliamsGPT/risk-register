@@ -170,8 +170,14 @@ class ProfilePicsMixin:
 class StaffFormMixin:
     def clean_email(self):
         email = self.cleaned_data['email'].lower()  # Normalize email to lowercase
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("A user with this email already exists.")
+        is_updating = self.instance.id is not None #getattr(self, 'is_updating')
+        if is_updating:
+            staff = self.instance
+            if User.objects.exclude(id=staff.id).filter(email=email).exists():
+                raise ValidationError('Someone else has this email.')
+        else:
+            if User.objects.filter(email=email).exists():
+                raise ValidationError("A user with this email already exists.")
         return email
 
 
