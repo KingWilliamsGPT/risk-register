@@ -10,6 +10,7 @@
         k = undefined;
         $(document).ready(()=>{
             let prob, impact;
+            const max_rating = 4 * 4;
             const rmap = ['', 'cyan', 'green', 'yellow', 'orange', 'red'];
 
             function addIndicatorToProbOrImpact(e){
@@ -19,7 +20,7 @@
             }
 
             function getRatingColor(prob, impact){
-                const colors = ['teal', 'cyan', 'green', 'yellow', 'orange', 'red'];
+                const colors = ['teal', 'cyan', 'green', 'yellow',  'red'];
                 const ranges = [
                     [1,2],    // cyan very_low
                     [3,3],    // green low  
@@ -61,7 +62,7 @@
                 function changeRating(a, b, ratingSlider){
                     a = Number(a)
                     b = Number(b)
-                    r = (a * b) / 25 * 100;
+                    r = (a * b) / max_rating * 100;
                     const slider = ratingSlider.find('.inside');
                     const sliderColor = `var(--bs-${getRatingColor(a, b)})`;
 

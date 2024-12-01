@@ -20,9 +20,10 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.db.models.functions import TruncDay, TruncMonth
+from django.utils.timezone import make_aware
 
 from apps.authentication.models import Department, User, User as Staff, UserRecoveryCode, reset_or_generate_code 
-from apps.authentication.forms import AddDepartmentForm
+from apps.authentication.forms import AddDepartmentForm, RecoveryForm
 
 from .models import Risk
 from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm, UpdateStaffImageForm,  StaffPasswordChangeForm
@@ -40,8 +41,6 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.generic import ListView
-from .models import Risk
-from .forms import RiskFilterForm
 
 
 
@@ -146,7 +145,7 @@ class DownloadRiskExcel(SuperUserMixin, LoginRequiredMixin, g.View):
         sheet.title = "Risks"
 
         # Set the headers
-        headers = ["Risk Description", "Risk Type", "Risk Response", "Budget", "Probability", "Impact", "Rating", "Risk Owner", "Status", "Date Raised"]
+        headers = ["Risk Description", "Risk Type", "Risk Response", "Budget", "Probability", "Impact", "Severity", "Risk Owner", "Status", "Date Raised"]
         for col_num, header in enumerate(headers, 1):
             col_letter = get_column_letter(col_num)
             sheet[f"{col_letter}1"] = header
@@ -258,6 +257,8 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
             impact = form.cleaned_data.get('impact')
             is_closed = form.cleaned_data.get('is_closed')
             search_string = form.cleaned_data.get('search_string')
+            from_date = form.cleaned_data.get('from_date')
+            to_date = form.cleaned_data.get('to_date')
 
             if risk_type:
                 queryset = queryset.filter(risk_type=risk_type)
@@ -275,6 +276,12 @@ class RiskListView(SuperUserMixin, LoginRequiredMixin, ListView):
                     models.Q(risk_owner__code__icontains=search_string) |
                     models.Q(risk_owner__description__icontains=search_string)
                 )
+            if from_date:
+                queryset = queryset.filter(date_opened__gte=from_date)
+            if to_date:
+                # the combine stuff is so it includes risk created at all times on `to_date` not only upto 00:00:00 but at the end of the day
+                to_date = make_aware(datetime.combine(to_date, datetime.max.time()))
+                queryset = queryset.filter(date_opened__lte=to_date)
 
 
         return queryset.order_by(*self.get_ordering())
@@ -408,6 +415,46 @@ class RiskPieSummary(SuperUserMixin, LoginRequiredMixin, g.View):
             # res['labels'].append(f'{short_risk_type} ({risk_count})')
             res['labels'].append(f'{risk_type} ({risk_count})')
             res['tooltips'].append(risk_type)  # Full risk type name for tooltip
+
+        return JsonResponse(res, safe=False)
+
+from django.db.models import Count
+from django.http import JsonResponse
+
+
+class RiskPieSummaryByDepartment(SuperUserMixin, LoginRequiredMixin, g.View):
+    super_admin_only = True
+    
+    def get(self, request, *args, **kwargs):
+        # Aggregate risk counts grouped by department
+        risk_distribution = (
+            Risk.get_risks(request)
+            .values("risk_owner__name")  # Use the related `Department` name
+            .annotate(count=Count("id"))
+            .order_by("-count")[:5]  # Limit to top 5 departments
+        )
+
+        MAX_LEN_DEPARTMENT_NAME = 10
+
+        res = {
+            "series": [],
+            "labels": [],
+            "tooltips": [],  # Include full department names for tooltips
+        }
+
+        for risk in risk_distribution:
+            department_name, risk_count = risk["risk_owner__name"], risk["count"]
+            # Truncate department name for labels
+            # short_department_name = (
+            #     department_name[:MAX_LEN_DEPARTMENT_NAME] + "..."
+            #     if len(department_name) > MAX_LEN_DEPARTMENT_NAME
+            #     else department_name
+            # )
+            short_department_name = department_name
+
+            res["series"].append(risk_count)
+            res["labels"].append(f"{short_department_name} ({risk_count})")
+            res["tooltips"].append(department_name)  # Full name for tooltip
 
         return JsonResponse(res, safe=False)
 

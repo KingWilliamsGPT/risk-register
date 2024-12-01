@@ -14,6 +14,19 @@
         <div class="bg-loader d-none"></div>
         <div class="chart-area-no-data d-none"></div>
 
+        {% if user.is_super_admin %}
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Risk by department</h4>
+                    </div>
+                    <div class="card-body bg-loader" style="height: 25rem;">
+                        <div id="pie-chart" class="ct-chart ct-golden-section chartlist-chart mt-4" style="height: 25rem;"></div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="col-sm-12">
             <div class="card">
                 <div class="card-header">
@@ -25,7 +38,7 @@
             </div>
         </div>
 
-<!--         <div class="col-sm-12">
+        <!--         <div class="col-sm-12">
             <div class="card">
                 <div class="card-header ">
                     <h4 class="card-title">Top Risks</h4>

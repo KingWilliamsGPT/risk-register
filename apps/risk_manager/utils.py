@@ -3,6 +3,11 @@ from django.apps import apps
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.timezone import now as _now
+from django.templatetags.static import static
+from datetime import date
+
 
 from django.core.mail.backends.base import BaseEmailBackend
 from pysendpulse.pysendpulse import PySendPulse
@@ -11,6 +16,45 @@ from mailgun import Mailgun
 
 
 EMAIL_THRID_PARTY = 'sendpulse'
+
+
+
+def get_festive_period():
+    # Define festive periods as tuples of (start_date, end_date, period_name, greeting, image_url)
+
+    now = _now()
+    festive_periods = [
+        (date(now.year, 12, 1), date(now.year, 12, 26), "Christmas", "Merry Christmas", static("festives/chrismas_hat.png")),
+        (date(now.year, 12, 31), date(now.year + 1, 1, 1), "New Year", "Happy New Year", static("festives/fun_girl.png")),
+        (date(now.year, 2, 14), date(now.year, 2, 14), "Valentine's Day", "Happy Valentine's Day", static("festives/cupid.png")),
+        (date(now.year, 10, 31), date(now.year, 10, 31), "Halloween", "Happy Halloween", static("festives/cat.png")),
+        (date(now.year, 11, 23), date(now.year, 11, 23), "Thanksgiving", "Happy Thanksgiving", static("festives/emoji_happy.png")),
+        # Add more periods as needed
+    ]
+
+    # Get today's date in Django's timezone-aware format
+    today = now.date()
+
+    # Check each festive period
+    for start, end, name, greeting, url in festive_periods:
+        # Adjust end year for year-crossing periods
+        if start > end:
+            # Handle year-crossing periods by splitting the condition
+            if (start <= today or today <= end.replace(year=start.year + 1)):
+                return {
+                    'name': name,
+                    'greeting': greeting,
+                    'url': url,
+                }
+        else:
+            if start <= today <= end:
+                return {
+                    'name': name,
+                    'greeting': greeting,
+                    'url': url,
+                }
+
+    return None
 
 
 

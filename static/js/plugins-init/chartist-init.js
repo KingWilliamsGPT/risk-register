@@ -25,53 +25,119 @@
 				jQuery('.chartlist-chart').css('min-width',chartBlockWidth - 31);
 			}
 		}
+
+		var pieChart = async function(apiURL){
+			//Pie chart with custom labels
+
+			const pieChartID = '#pie-chart';
+
+		    const res = await fetch(apiURL, {
+		        headers: {
+		            'X-Requested-With': 'XMLHttpRequest',
+		            'Accept': 'application/json',
+		        },
+		        credentials: 'same-origin'  // Important for including cookies with the request
+		    });
+			  
+			var data = {
+				labels: ['35%', '55%', '10%'],
+				series: [20, 15, 40]
+			  };
+
+			const draw = (data, pieChartID)=>{
+				var options = {
+					labelInterpolationFnc: function(value) {
+					  return value[0]
+					}
+				  };
+				  
+				var responsiveOptions = [
+					['screen and (min-width: 640px)', {
+					  chartPadding: 30,
+					  donut: true,
+					  labelOffset: 100,
+					  donutWidth: 60,
+					  labelDirection: 'explode',
+					  labelInterpolationFnc: function(value) {
+						return value;
+					  }
+					}],
+					['screen and (min-width: 1024px)', {
+					  labelOffset: 60,
+					  chartPadding: 20
+					}]
+				];
+				  
+				new Chartist.Pie(pieChartID, data, options, responsiveOptions);
+			}
+
+		    if (res.ok) {
+		        const data = await res.json();
+		        const e = $(pieChartID).parent();
+		        e.removeClass('bg-loader');
+
+		        if (!data.series.length) {
+		            e.addClass('chart-area-no-data');
+		            e.attr('title', 'No data was returned, try saving some data.');
+		            return;
+		        }
+
+		        draw(data, pieChartID);
+
+		    } else {
+		        console.log('Failed to load risk summary bar chart data');
+		        chart.innerHTML = '<p>Could not load data.</p>';
+		    }
+			
+		}
+
 		// var riskDeptDistribution = async function(apiURL){
-		// 	/* Sample data shape
-		// 		{"series":[1,1,1,5,2,2,2,1],"labels":["Environ... (1)","Financi... (1)","Market ... (1)","Operati... (5)","Politic... (2)","Reputat... (2)","Supplie... (2)","Technol... (1)"],"tooltips":["Environmental Risk","Financial Risk","Market Risk","Operational Risk","Political Risk","Reputational Risk","Supplier/Vendor Risk","Technological Risk"]}
-		// 	*/
+			// 	/* Sample data shape
+			// 		{"series":[1,1,1,5,2,2,2,1],"labels":["Environ... (1)","Financi... (1)","Market ... (1)","Operati... (5)","Politic... (2)","Reputat... (2)","Supplie... (2)","Technol... (1)"],"tooltips":["Environmental Risk","Financial Risk","Market Risk","Operational Risk","Political Risk","Reputational Risk","Supplier/Vendor Risk","Technological Risk"]}
+			// 	*/
 
-		//     const chartID = '#risk-dept-distribution';
-		//     const chart = document.querySelector(chartID);
+			//     const chartID = '#risk-dept-distribution';
+			//     const chart = document.querySelector(chartID);
 
-		//     const res = await fetch(apiURL, {
-		//         headers: {
-		//             'X-Requested-With': 'XMLHttpRequest',
-		//             'Accept': 'application/json',
-		//         },
-		//         credentials: 'same-origin'  // Important for including cookies with the request
-		//     });
+			//     const res = await fetch(apiURL, {
+			//         headers: {
+			//             'X-Requested-With': 'XMLHttpRequest',
+			//             'Accept': 'application/json',
+			//         },
+			//         credentials: 'same-origin'  // Important for including cookies with the request
+			//     });
 
-		//     if (res.ok) {
-		//         const data = await res.json();
-		//         a = data;
-		//         const e = $(chart).parent();
-		//         e.removeClass('bg-loader');
+			//     if (res.ok) {
+			//         const data = await res.json();
+			//         a = data;
+			//         const e = $(chart).parent();
+			//         e.removeClass('bg-loader');
 
-		//         if (!data.series.length) {
-		//             e.addClass('chart-area-no-data');
-		//             e.attr('title', 'No data was returned, try saving some data.');
-		//         }
+			//         if (!data.series.length) {
+			//             e.addClass('chart-area-no-data');
+			//             e.attr('title', 'No data was returned, try saving some data.');
+			//         }
 
-		//         const chartOpt = {
-		//             labelInterpolationFnc: function(value, index) {
-		//                 return data.labels[index];  // Short labels for display
-		//             },
-		//             plugins: [
-		//                 // Chartist.plugins.tooltip({
-		//                 //     tooltipFnc: function(meta, value, index) {
-		//                 //         return data.tooltips[index];  // Full risk type name on hover
-		//                 //     }
-		//                 // })
-	    //                 Chartist.plugins.tooltip()  // Add tooltips (requires the Chartist tooltip plugin)
+			//         const chartOpt = {
+			//             labelInterpolationFnc: function(value, index) {
+			//                 return data.labels[index];  // Short labels for display
+			//             },
+			//             plugins: [
+			//                 // Chartist.plugins.tooltip({
+			//                 //     tooltipFnc: function(meta, value, index) {
+			//                 //         return data.tooltips[index];  // Full risk type name on hover
+			//                 //     }
+			//                 // })
+		    //                 Chartist.plugins.tooltip()  // Add tooltips (requires the Chartist tooltip plugin)
 
-		//             ]
-		//         };
+			//             ]
+			//         };
 
-		//         new Chartist.Pie(chartID, data, chartOpt);
-		//     } else {
-		//         console.log('Failed to load risk summary pie chart data');
-		//         chart.innerHTML = '<p>Could not load data.</p>';
-		//     }
+			//         new Chartist.Pie(chartID, data, chartOpt);
+			//     } else {
+			//         console.log('Failed to load risk summary pie chart data');
+			//         chart.innerHTML = '<p>Could not load data.</p>';
+			//     }
 		// };
 
 		var riskDeptDistribution = async function(apiURL) {
@@ -154,40 +220,6 @@
 		        console.log('Failed to load data');
 		    }
 		};
-
-		var dailyMontlyRiskProgress = async function(apiURL){
-			const e_id = '#daily-montly-risk-progress';
-			const elem = $(e_id);
-			const barWidth = 50;
-
-			var data = {
-				labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec','Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec','Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',],
-				series: [
-				  [5, 4, 3, 7, 5, 10, 3, 4, 8, 10, 6, 8,5, 4, 3, 7, 5, 10, 3, 4, 8, 10, 6, 8,5, 4, 3, 7, 5, 10, 3, 4, 8, 10, 6, 8,],
-				  [3, 2, 9, 5, 4, 6, 4, 6, 7, 8, 7, 4,5, 4, 3, 7, 5, 10, 3, 4, 8, 10, 6, 8,5, 4, 3, 7, 5, 10, 3, 4, 8, 10, 6, 8,]
-				]
-			  };
-
-			var options = {
-				seriesBarDistance: 10
-			};
-
-			const chartWidth = data.labels.length * barWidth;
-			elem.css({width: chartWidth + 'px'});
-
-			var responsiveOptions = [
-				['screen and (max-width: 640px)', {
-				  seriesBarDistance: 5,
-				  axisX: {
-					labelInterpolationFnc: function (value) {
-					  return value[0];
-					}
-				  }
-				}]
-			];
-			new Chartist.Bar(e_id, data, options, responsiveOptions);
-		}
-
 
 		var _updateProgressChart = async function(apiURL, startDate, endDate, view, progressChart) {
 		    startDate = startDate.toISOString();
@@ -345,9 +377,11 @@
 				riskSuperSummaryDistribution(API_URLS.risk_super_summary);
 				dailyMontlyRiskProgress(API_URLS.risk_progress);
 				riskByDepartmentDistribution(API_URLS.risk_dept_summary);
+				pieChart(API_URLS.risk_pie_summary_by_department);
 			},
 			
 			resize:function(){
+				pieChart(API_URLS.risk_pie_summary_by_department);
 			}
 		}
 	

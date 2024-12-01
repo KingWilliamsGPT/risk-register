@@ -6,6 +6,8 @@ from apps.risk_manager import views as rviews
 
 from .forms import UserLoginForm, ResetPasswordConfirmForm, ResetPasswordForm
 
+
+
 urlpatterns = [
     # login view from auth_views with custom login template
     # path('login/', auth_views.LoginView.as_view(template_name='authentication/login.html',
@@ -43,6 +45,7 @@ urlpatterns = [
     # path('', views.homepage, name='homepage'),
     path('', rviews.Dashboard.as_view(), name='homepage'),
 
+    path('auth/login/using_recovery_codes/', views.AccountRecoveryWithCode.as_view(), name='login_using_recovery_codes'),
 
 
 

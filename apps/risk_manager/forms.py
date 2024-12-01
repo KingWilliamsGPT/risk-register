@@ -159,6 +159,39 @@ class RiskFilterForm(forms.Form):
     is_closed = forms.ChoiceField(choices=[('', 'All'), ('True', 'Closed'), ('False', 'Open')], required=False)
     search_string = forms.CharField(required=False)
 
+    from_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='From Date',
+    )
+
+    to_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='To Date',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['from_date'].widget.attrs.update({
+            'hidden': '',
+        })
+        self.fields['to_date'].widget.attrs.update({
+            'hidden': '',
+        })
+
+
+    def clean(self):
+        cleaned_data = super().clean()
+        from_date = cleaned_data.get('from_date')
+        to_date = cleaned_data.get('to_date')
+
+        if from_date and to_date and from_date > to_date:
+            # Swap the dates
+            cleaned_data['from_date'], cleaned_data['to_date'] = to_date, from_date
+
+        return cleaned_data
+
 
 class ProfilePicsMixin:
     def get_profile_pics(self):
@@ -309,3 +342,4 @@ class StaffPasswordChangeForm(forms.Form):
         user.set_password(self.cleaned_data["new_password"])
         user.save()
         return user
+

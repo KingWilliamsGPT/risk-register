@@ -11,10 +11,11 @@ urlpatterns = [
     path('', views.Dashboard.as_view(), name='dashboard'),
     path('', views.Dashboard.as_view(), name='home'),
 
+    # this also shouldn't be here, but again kinda lazy 
+
     path('me/password_change/', views.MePasswordChange.as_view(), name='password_change'),
     path('me/recovery_codes/reset', views.MeRecoveryCodeReset.as_view(), name='recovery_codes_reset'),
     path('me/recovery_codes/download', views.MeRecoveryCodeDownload.as_view(), name='recovery_codes_download'),
-
 
     path('risk/', views.RiskListView.as_view(), name='risk_list'),
     path('risk/excel/', views.DownloadRiskExcel.as_view(), name='risk_excel'),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('risk/statistics/api/data/severe_risk_summary/', views.RiskSeveritySummaryView.as_view(), name='risk_severe_summary'),
     path('risk/statistics/api/data/progress_chart_view/', views.RiskProgressChartView.as_view(), name='risk_progress'),
     path('risk/statistics/api/data/risk_dept_distribution/', views.RiskByDeptSummary.as_view(), name='risk_dept_summary'),
+    path('risk/statistics/api/data/risk_pie_summary_by_department/', views.RiskPieSummaryByDepartment.as_view(), name='risk_pie_summary_by_department'),
     path('risk/pinned/', views.RiskPinned.as_view(), name='risk_pinned'),
 
     path('departments/', views.DepartmentListView.as_view(), name='dept_list'),

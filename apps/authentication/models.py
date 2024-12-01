@@ -54,6 +54,9 @@ class User(AbstractUser):
             help_text="Upload a profile picture",
         )
 
+    def has_stupid_password(self):
+        return self.check_password(self.last_name.upper())
+
     def get_profile_url(self):
         if self.uploaded_profile_pic:
             return self.uploaded_profile_pic.url
@@ -87,6 +90,16 @@ class User(AbstractUser):
             super().save(*args, **kwargs)
         except IntegrityError:
             pass
+
+    def can_authenticate_by_codes(self, login_codes):
+        my_codes = [str(code) for code in self.recovery_codes.all()]
+        for code in login_codes:
+            try:
+                twin_index = my_codes.index(code)
+            except ValueError:
+                return False
+            del my_codes[twin_index]  # remove the code so it doen't match again
+        return True
             
 
 class UserRecoveryCode(models.Model):

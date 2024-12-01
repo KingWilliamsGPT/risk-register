@@ -155,3 +155,50 @@ class AddDepartmentForm(forms.ModelForm):
             'placeholder': f'brief description of department, max characters {mx}',
             'maxlength': str(mx),
         })
+
+
+class RecoveryForm(forms.Form):
+    username = forms.CharField()
+    code1 = forms.CharField()
+    code2 = forms.CharField()
+    code3 = forms.CharField()
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Username or Email',
+            'required': 'True',
+            'id': 'username_field',
+        })
+        self.fields['code1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'code 1',
+            'required': 'True',
+        })
+        self.fields['code2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'code 2',
+            'required': 'True',
+        })
+        self.fields['code3'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'code 3',
+            'required': 'True',
+        })
+
+    def _clean(self, code):
+        return code.strip()
+
+    def clean_code1(self):
+        return self._clean(self.cleaned_data.get('code1'))
+
+    def clean_code2(self):
+        return self._clean(self.cleaned_data.get('code2'))
+
+    def clean_code3(self):
+        return self._clean(self.cleaned_data.get('code3'))
+
+    def get_codes(self):
+        return [self.cleaned_data.get(code) for code in ('code1', 'code2', 'code3')]

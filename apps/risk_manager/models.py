@@ -45,16 +45,21 @@ class Risk(models.Model):
     }
 
     PROBABILITY_CHOICES = [
-        (1, '1 - Very Low'),
-        (2, '2 - Low'),
-        (3, '3 - Medium'),
-        (4, '4 - High'),
-        (5, '5 - Very High'),
+        (1, '1 - Unlikely'),
+        (2, '2 - Possible'),
+        (3, '3 - Likely'),
+        (4, '4 - Certain'),
+    ]
+    IMPACT_RATING = [
+        (1, '1 - Minor'),
+        (2, '2 - Significant'),
+        (3, '3 - Major'),
+        (4, '4 - Severe'),
     ]
     PROBABILITY_COLORS  = ['rgb(153 204 153)', 'rgb(255 255 153)', 'rgb(247 211 145)', 'rgb(247 173 145)', 'rgb(247 169 164)']
     PROBABILITY_CHOICES_DICT = dict(PROBABILITY_CHOICES)
 
-    MAX_RATING = 5*5
+    MAX_RATING = len(PROBABILITY_CHOICES) * len(IMPACT_RATING)
 
 
     RANGE_1_TO_5 = [
