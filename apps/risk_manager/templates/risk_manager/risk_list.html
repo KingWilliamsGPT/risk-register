@@ -110,7 +110,7 @@
                                         <td title="{{risk.risk_description}}"><a href="{% url 'risk_register:risk_update' risk.id %}">{{ risk.risk_description|trim:"30" }}</a></td>
                                         <td>{{ risk.risk_type }}</td>
                                         <td title="{{ risk.risk_response }}">{{ risk.risk_response|trim:"30" }}</td>
-                                        <td>₦{{ risk.risk_budget.amount|default:"0.0" }}</td>
+                                        <td>₦{{ risk.risk_budget.amount|default:"0.0"|intcomma }}</td>
                                         <td title="{{ risk.probability }} - {{ risk.get_prob_label }}"><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_prob_color }}!important;" >{{ risk.get_prob_label }}</span></td>
                                         <td title="{{ risk.impact }} - {{ risk.get_impact_label }}"><span class="badge badge-primary badge-sm light" style="color: #5f6063; background-color: {{ risk.get_impact_color }}!important;" >{{ risk.get_impact_label }}</span></td>
                                         <td title="{{ risk.rating_info.tag }} {{ risk.rating_percent }}%">
