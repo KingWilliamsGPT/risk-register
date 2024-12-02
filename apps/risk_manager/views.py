@@ -916,7 +916,7 @@ class StaffUpdateView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
 
     def dispatch(self, request, pk):
         # only super users can edit other staffs
-        if not request.user.is_super_admin and pk != request.user.id:
+        if request.user.is_authenticated and not request.user.is_super_admin and pk != request.user.id:
             return redirect('risk_register:page_403')
         return super().dispatch(request, pk)
 
