@@ -1,5 +1,6 @@
 {% extends "./risk_register_base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block nav_title %}Risk{% endblock nav_title %}
 
@@ -183,6 +184,25 @@
     [data-theme-version="dark"] .rating {
       background-color: #333a54 !important;
     }
+    .editors {
+        position: relative; /* Ensures child elements are positioned relative to this container */
+        display: flex; /* Allows items to align horizontally */
+        gap: 0; /* Remove extra space between spans */
+    }
+
+    .editors a {
+        position: relative;
+    }
+
+    .editors img {
+        height: 25px; /* Ensure images are uniform */
+        border-radius: 50%; /* Make the image circular */
+        border: 2.5px solid white; /* Optional: Add a border for better visibility */
+        position: relative;
+        z-index: 1; /* Keep images in stacking order */
+        margin-left: -9px; /* Negative margin to create overlap effect */
+    }
+
 </style>
 
 <div class="container-fluid">
@@ -193,18 +213,29 @@
                     <h4 class="card-title">Update Risk</h4>
 
                     <div class="pull-right d-flex" style="align-items: center;">
-                        <div style="margin-top:-10px; padding-right: 10px !important" id="stat">{% if risk.is_closed %}CLOSED{% else %}OPENED{% endif %}</div>
-                        {% if user.is_super_admin %}
-                            <label class="switch pull-right">
-                                <input type="checkbox" id="nice_checkbox">
-                                <span class="slider"></span>
-                            </label>
-                        {% endif %}
+                        <div style="margin-top:-10px; padding-right: 10px !important" id="stat" title="{% if risk.is_closed %}Open this risk{% else %}Close this risk{% endif%}">
+                            {% if risk.is_closed %}CLOSED{% else %}OPENED{% endif %}</div>
+                            {% if user.is_super_admin %}
+                                <label class="switch pull-right">
+                                    <input type="checkbox" id="nice_checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            {% endif %}
                     </div>
 
                 </div>
                 <div class="card-body">
                     <div class="basic-form">
+                        <div>
+                            <div class="editors pull-right" title="See Editors of this risk">
+                                {% for staff in risk.get_editors %}
+                                    <a href="{% url 'risk_register:risk_editors' risk.id %}"><img src="{{ staff.get_profile_url }}"></a>
+                                {% endfor %}
+                                {% if risk.remainder %}
+                                    <a href="{% url 'risk_register:risk_editors' risk.id %}">+{{ risk.remainder|intcomma }}</a>
+                                {% endif %}
+                            </div>
+                        </div>
                         <form method='post' action=''>
                             {% csrf_token %}
                             <p>{% for message in messages %}{{message}}{% endfor %}</p>

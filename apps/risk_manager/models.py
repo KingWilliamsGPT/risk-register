@@ -8,6 +8,17 @@ from django.contrib.auth import get_user_model
 
 
 
+def get_risk_updates(user_or_risk):
+    cn = user_or_risk.__class__.__name__
+    if cn in ('Risk', 'User'):
+        if cn == 'Risk':
+            return RiskUpdate.objects.filter(user=user_or_risk).order_by('-timestamp')
+        else:
+            return RiskUpdate.objects.filter(risk=user_or_risk).order_by('-timestamp')
+
+
+
+
 class Risk(models.Model):
     # TODO: 
     #  - RISK SHOULD BE DUE, OVERDUE, LONG OVERDUE, UNSPECIFIED
@@ -105,6 +116,20 @@ class Risk(models.Model):
     # estimated_closing_date = models.DateTimeField()
     # opened_by = models.CharField(max_length=50, blank=True, null=True)
     # closed_by = models.DateTimeField(null=True, blank=True)
+
+
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # Reference to the User model
+        on_delete=models.SET_NULL,  # If the user is deleted, set this field to NULL
+        null=True, 
+        related_name="created_risks",  # Optional: Name for reverse relation
+    )
+
+    updators = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through='RiskUpdate',
+        related_name="updated_risks",
+    )
     
 
     def rating(self):
@@ -156,3 +181,31 @@ class Risk(models.Model):
         else:
             return Risk.objects.filter(risk_owner=me.department)
 
+    def get_editors(self, limit_updators=5):
+        # returns editors and creators
+        # Note: limit_updators is the number of updators to add to the creator which must be part of the returned array
+
+        result = getattr(self, '_get_editors_cache', None)
+        if not result:
+            editors = []
+            editors.extend(self.updators.all())
+            if self.creator:
+                editors.append(self.creator)
+
+            if limit_updators:
+                self.remainder = max(0, len(editors[limit_updators:])-1)
+            else:
+                limit_updators = None
+                self.remainder = 0
+
+            result = editors if limit_updators is None else editors[:max(1, limit_updators)+1]
+            self._get_editors_cache = result
+        else:
+            print('using cache\n'*1000)
+        return result            
+
+
+class RiskUpdate(models.Model):
+    risk = models.ForeignKey('Risk', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)

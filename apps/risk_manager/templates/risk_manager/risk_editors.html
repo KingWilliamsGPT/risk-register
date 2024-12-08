@@ -1,0 +1,151 @@
+{% extends "./risk_register_base.html" %}
+{% load static %}
+{% load humanize %}
+
+
+{% block nav_title %}Risk{% endblock nav_title %}
+
+{% block more_scripts %}
+{{block.super}}
+
+
+{% endblock %}
+
+{% block main_content %}
+
+<style type="text/css">
+    .editors {
+        position: relative; /* Ensures child elements are positioned relative to this container */
+        display: flex; /* Allows items to align horizontally */
+        gap: 0; /* Remove extra space between spans */
+    }
+
+    .editors a {
+        position: relative;
+    }
+
+    .editors img {
+        height: 25px; /* Ensure images are uniform */
+        border-radius: 50%; /* Make the image circular */
+        border: 2.5px solid white; /* Optional: Add a border for better visibility */
+        position: relative;
+        z-index: 1; /* Keep images in stacking order */
+        margin-left: -9px; /* Negative margin to create overlap effect */
+    }
+
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 col-12">
+            <div class="card risk-form">
+                <div class="card-header">
+                    <h4 class="card-title">Editors</h4>
+
+                </div>
+                <div class="card-body">
+
+                	<h4>Creator</h4>
+                	<table class="table table-bordered table-hover table-striped verticle-middle table-responsive-sm">
+	                    <thead>
+	                        <tr>
+	                            <th scope="col"></th>
+	                            <th scope="col">Name</th>
+
+
+	                            <th scope="col">Date Created</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody id="tbody">
+                            <tr>
+                                <td><img src="{{ risk.creator.get_profile_url }}" class="rounded-lg me-2" width="24" alt=""></td>
+                                <td>{{ risk.creator.get_display_name }}</td>
+                                <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk.date_opened|date:"Y-m-d" }}" title="{{risk.date_opened|naturaltime}}" >{{ risk.date_opened }}</a></td>
+                            </tr>
+	                    </tbody>
+                	</table>
+
+                	<h4>Editors</h4>
+                	<table class="table table-bordered table-hover table-striped verticle-middle table-responsive-sm">
+	                    <thead>
+	                        <tr>
+	                            <th scope="col"></th>
+	                            <th scope="col">Name</th>
+	                            <th scope="col">Last Update</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody id="tbody">
+	                        {% for risk_updater in risk_updaters %}
+	                            <tr>
+	                                <td><img src="{{ risk_updater.user.get_profile_url }}" class="rounded-lg me-2" width="24" alt=""></td>
+	                                <td>{{ risk_updater.user.get_display_name }}</td>
+	                                <td><a href="javascript:void(0)" class="show-in-date-picker" data-datepicker-date="{{ risk_updater.timestamp|date:"Y-m-d" }}" title="{{risk_updater.timestamp|naturaltime}}" >{{ risk_updater.timestamp }}</a></td>
+	                            </tr>
+	                        {% endfor %}
+	                    </tbody>
+                	</table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Extra small devices (portrait phones, less than 576px) */
+    /* No media query since this is the default in Bootstrap */
+    #risk_budget_0{
+            /* input */
+            border-radius: 10px 0 0 10px;
+            height: auto;
+            flex-grow: 1;
+        }
+        #risk_budget_0 + div{
+            width: 123px;
+        }
+        .budget-input .dropdown-toggle{
+            /* btn dropdown trigger */
+            border-radius: 0 10px 10px 0;
+            height: 100%;
+        }
+
+    /* Small devices (landscape phones, 576px and up) */
+    @media (min-width: 576px) {
+
+    }
+
+    /* Medium devices (tablets, 768px and up) */
+    @media (min-width: 768px) {
+    /* md upwards */
+    }
+
+    /* Large devices (desktops, 992px and up) */
+    @media (min-width: 992px) {
+    /* lg upwards */
+    }
+
+    /* Extra large devices (large desktops, 1200px and up) */
+    @media (min-width: 1200px) {
+    /* xl upwards */
+    }
+
+    /* XXL devices (larger desktops, 1400px and up) */
+    @media (min-width: 1400px) {
+    /* xxl upwards */
+    }
+</style>
+{% endblock main_content %}
+
+
+{% block more_head %}
+    {{ block.super }}
+    <link href="vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <!-- Add Flatpickr CSS with material blue theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    <style>
+        .flatpickr-calendar.open {
+            z-index: 1060 !important; /* Ensure calendar appears above Bootstrap modal */
+        }
+    </style>
+{% endblock more_head %}

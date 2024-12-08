@@ -25,7 +25,7 @@ from django.utils.timezone import make_aware
 from apps.authentication.models import Department, User, User as Staff, UserRecoveryCode, reset_or_generate_code 
 from apps.authentication.forms import AddDepartmentForm, RecoveryForm
 
-from .models import Risk
+from .models import Risk, RiskUpdate
 from .forms import AddRiskForm, RiskFilterForm, AddRiskMinimalForm, AddStaffForm, UpdateStaffMinimalForm, UpdateStaffProfilePicForm, UpdateStaffImageForm,  StaffPasswordChangeForm
 from .mixins import SuperUserMixin
 from .utils import render_template, make_random_password
@@ -41,8 +41,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.generic import ListView
-
-
+from dateutil.relativedelta import relativedelta
 
 
 def get_most_severe_risks(num, request=None):
@@ -180,7 +179,10 @@ class AddRisk(SuperUserMixin, LoginRequiredMixin, g.CreateView):
 
     def form_valid(self, form):
         reponse = super().form_valid(form)
-        self.object = form.save()
+        risk = form.save(commit=False)
+        risk.creator = self.request.user
+        risk.save()
+        self.object = risk
         response = HttpResponseRedirect(self.get_success_url())
 
         self.mail_others()
@@ -355,6 +357,36 @@ class RiskDetailView(SuperUserMixin, LoginRequiredMixin, g.UpdateView):
         context['form'] = self.form_class(instance=self.object)
         return context
 
+    def form_valid(self, form):
+        reponse = super().form_valid(form)
+        risk = form.save()
+
+        last_update = RiskUpdate.objects.all().filter(user=self.request.user, risk=risk).first()
+        if last_update:
+            last_update.timestamp = timezone.now()
+        else:
+            RiskUpdate.objects.create(
+                risk=risk,
+                user=self.request.user,
+            )
+        self.object = risk
+        response = HttpResponseRedirect(self.get_success_url())
+
+        # self.mail_others()
+        return response
+
+class RiskEditors(SuperUserMixin, LoginRequiredMixin, g.DetailView):
+    model = Risk
+    template_name = "risk_manager/risk_editors.html"
+    context_object_name = "risk"
+
+
+    def get_context_data(self, **kwargs):
+        """Insert the form into the context dict."""
+        context = super().get_context_data(**kwargs)        
+        risk = context['risk']
+        context['risk_updaters'] = RiskUpdate.objects.all().filter(risk=risk).order_by('-timestamp')
+        return context
 
 class RiskStat(SuperUserMixin, LoginRequiredMixin, g.TemplateView):
     template_name = "risk_manager/risk_statistics.html"
@@ -441,6 +473,7 @@ class RiskPieSummaryByDepartment(SuperUserMixin, LoginRequiredMixin, g.View):
             "labels": [],
             "tooltips": [],  # Include full department names for tooltips
         }
+        risk_counts = []
 
         for risk in risk_distribution:
             department_name, risk_count = risk["risk_owner__name"], risk["count"]
@@ -453,8 +486,15 @@ class RiskPieSummaryByDepartment(SuperUserMixin, LoginRequiredMixin, g.View):
             short_department_name = department_name
 
             res["series"].append(risk_count)
-            res["labels"].append(f"{short_department_name} ({risk_count})")
+            res["labels"].append(f"{short_department_name}")
             res["tooltips"].append(department_name)  # Full name for tooltip
+
+            risk_counts.append(risk_count)
+
+        total_risk = sum(risk_counts)
+        for index, label in enumerate(res["labels"]):
+            percent = round(risk_counts[index] / total_risk * 100, 2)
+            res["labels"][index] = f"{res['labels'][index]} ({percent}%)"
 
         return JsonResponse(res, safe=False)
 
@@ -627,7 +667,7 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
 
         start_date, end_date = min(start_date, end_date), max(start_date, end_date)
 
-        # Initialize data arrays
+        # Initialize data arraysProgre
         labels = []
         opened_risks_data = []
         closed_risks_data = []
@@ -668,21 +708,75 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
                     closed_risks_data[index] = entry['count']
 
         elif view == 'monthly':
+            #     months_range = ((end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1)
+            #     labels = [(start_date + timedelta(days=i * 30)).strftime('%b %Y') for i in range(months_range)]
+            #     opened_risks_data = [0] * months_range
+            #     closed_risks_data = [0] * months_range
+
+            #     # Query risks grouped by month and year
+            #     opened_risks = (
+            #         Risk.get_risks(request).filter(is_closed=False, date_opened__range=(start_date, end_date))
+            #         .annotate(month=TruncMonth('date_opened'))
+            #         .values('month')
+            #         .annotate(count=Count('id'))
+            #         .order_by('month')
+            #     )
+            #     closed_risks = (
+            #         Risk.get_risks(request).filter(is_closed=True, date_opened__range=(start_date, end_date))
+            #         .annotate(month=TruncMonth('date_opened'))
+            #         .values('month')
+            #         .annotate(count=Count('id'))
+            #         .order_by('month')
+            #     )
+
+            #     # Populate data arrays
+            #     for entry in opened_risks:
+            #         month = entry['month'].date()
+            #         index = (month.year - start_date.year) * 12 + (month.month - start_date.month)
+            #         if 0 <= index < months_range:
+            #             opened_risks_data[index] = entry['count']
+
+            #     for entry in closed_risks:
+            #         month = entry['month'].date()
+            #         index = (month.year - start_date.year) * 12 + (month.month - start_date.month)
+            #         if 0 <= index < months_range:
+            #             closed_risks_data[index] = entry['count']
+
+            # # Prepare the response data
+            # response_data = {
+            #     'labels': labels,
+            #     'opened_risks': opened_risks_data,
+            #     'closed_risks': closed_risks_data,
+            # }
+
+            # return JsonResponse(response_data)
+
+            # Adjust start_date to the first of the month
+
+            # Align start_date and end_date to the first of their respective months
+            start_date = start_date.replace(day=1)
+            end_date = (end_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)  # Ensure end_date covers the whole month
             months_range = ((end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1)
-            labels = [(start_date + timedelta(days=i * 30)).strftime('%b %Y') for i in range(months_range)]
+
+            # Generate labels for each month
+            labels = [(start_date + relativedelta(months=i)).strftime('%b %Y') for i in range(months_range)]
+
+            # Initialize data arrays
             opened_risks_data = [0] * months_range
             closed_risks_data = [0] * months_range
 
             # Query risks grouped by month and year
             opened_risks = (
-                Risk.get_risks(request).filter(is_closed=False, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request)
+                .filter(is_closed=False, date_opened__range=(start_date, end_date))
                 .annotate(month=TruncMonth('date_opened'))
                 .values('month')
                 .annotate(count=Count('id'))
                 .order_by('month')
             )
             closed_risks = (
-                Risk.get_risks(request).filter(is_closed=True, date_opened__range=(start_date, end_date))
+                Risk.get_risks(request)
+                .filter(is_closed=True, date_opened__range=(start_date, end_date))
                 .annotate(month=TruncMonth('date_opened'))
                 .values('month')
                 .annotate(count=Count('id'))
@@ -691,16 +785,14 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
 
             # Populate data arrays
             for entry in opened_risks:
-                month = entry['month'].date()
-                index = (month.year - start_date.year) * 12 + (month.month - start_date.month)
-                if 0 <= index < months_range:
-                    opened_risks_data[index] = entry['count']
+                month_index = (entry['month'].year - start_date.year) * 12 + (entry['month'].month - start_date.month)
+                if 0 <= month_index < months_range:
+                    opened_risks_data[month_index] = entry['count']
 
             for entry in closed_risks:
-                month = entry['month'].date()
-                index = (month.year - start_date.year) * 12 + (month.month - start_date.month)
-                if 0 <= index < months_range:
-                    closed_risks_data[index] = entry['count']
+                month_index = (entry['month'].year - start_date.year) * 12 + (entry['month'].month - start_date.month)
+                if 0 <= month_index < months_range:
+                    closed_risks_data[month_index] = entry['count']
 
         # Prepare the response data
         response_data = {
@@ -710,6 +802,7 @@ class RiskProgressChartView(SuperUserMixin, LoginRequiredMixin, g.View):
         }
 
         return JsonResponse(response_data)
+
 
 
 

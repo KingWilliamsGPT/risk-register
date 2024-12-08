@@ -96,7 +96,7 @@ class AddRiskMinimalForm(forms.ModelForm):
 class AddRiskForm(forms.ModelForm):
     class Meta:
         model = Risk
-        fields = '__all__'
+        fields = ['risk_description', 'risk_type', 'probability', 'impact', 'risk_response', 'risk_owner', 'risk_budget', 'is_closed']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

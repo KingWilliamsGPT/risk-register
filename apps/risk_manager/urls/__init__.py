@@ -22,6 +22,7 @@ urlpatterns = [
     path('risk/add/', views.AddRisk.as_view(), name='risk_create'),
     path('risk/<int:pk>/', views.AddRisk.as_view(), name='risk_read'),
     path('risk/<int:pk>/update/', views.RiskDetailView.as_view(), name='risk_update'),
+    path('risk/<int:pk>/update/editors_list/', views.RiskEditors.as_view(), name='risk_editors'),
     path('risk/<int:pk>/delete/', views.RiskDeleteView.as_view(), name='risk_delete'),
     path('risk/statistics/', views.RiskStat.as_view(), name='risk_statistics'),
     path('risk/statistics/api/data/pie_for_risk_summary/', views.RiskPieSummary.as_view(), name='risk_type_summary'),
